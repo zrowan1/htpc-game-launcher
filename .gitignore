@@ -137,3 +137,32 @@ dist
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# Node
+node_modules/
+package-lock.json
+dist/
+build/
+
+# Electron
+release/
+out/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# App data (local, don't commit)
+src/data/games.json
+src/data/games.json.bak
+.env.local
+
+# Logs
+*.log
+npm-debug.log*
