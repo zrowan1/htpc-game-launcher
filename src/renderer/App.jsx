@@ -1,29 +1,59 @@
 import React, { useState, useEffect } from 'react';
 import GameGrid from './components/GameGrid';
 import SettingsMenu from './components/SettingsMenu';
+import AddGameDialog from './components/AddGameDialog';
 import { useGamepad } from './hooks/useGamepad';
 import { useKeyboard } from './hooks/useKeyboard';
 import { useGames } from './hooks/useGames';
 
 export default function App() {
   const [showSettings, setShowSettings] = useState(false);
+  const [showAddGame, setShowAddGame] = useState(false);
+  const [gameExitedMsg, setGameExitedMsg] = useState(false);
   const { games, addGame, removeGame, refreshSteamLibrary } = useGames();
   const gamepadState = useGamepad();
   const keyboardState = useKeyboard();
 
+  // B button: toggle settings (only when add-game dialog is closed)
   useEffect(() => {
-    // Handle B button (controller) for settings toggle
-    if (gamepadState.buttonsPressed.B) {
+    if (gamepadState.buttonsPressed.B && !showAddGame) {
       setShowSettings((prev) => !prev);
     }
   }, [gamepadState.buttonsPressed.B]);
 
   useEffect(() => {
-    // Handle Escape key (keyboard fallback) for settings toggle
-    if (keyboardState.buttonsPressed.B) {
+    if (keyboardState.buttonsPressed.B && !showAddGame) {
       setShowSettings((prev) => !prev);
     }
   }, [keyboardState.buttonsPressed.B]);
+
+  // Y button: open add-game dialog (only on main grid)
+  useEffect(() => {
+    if (gamepadState.buttonsPressed.Y && !showSettings) {
+      setShowAddGame(true);
+    }
+  }, [gamepadState.buttonsPressed.Y]);
+
+  useEffect(() => {
+    if (keyboardState.buttonsPressed.Y && !showSettings) {
+      setShowAddGame(true);
+    }
+  }, [keyboardState.buttonsPressed.Y]);
+
+  // Listen for game-exited IPC event (exe games only)
+  useEffect(() => {
+    if (!window.electronAPI?.onGameExited) return;
+    const cleanup = window.electronAPI.onGameExited(() => {
+      setGameExitedMsg(true);
+      setTimeout(() => setGameExitedMsg(false), 3000);
+    });
+    return cleanup;
+  }, []);
+
+  const handleAddGame = async (gameData) => {
+    await addGame(gameData);
+    setShowAddGame(false);
+  };
 
   return (
     <div className="w-screen h-screen bg-gray-900 text-white">
@@ -39,6 +69,19 @@ export default function App() {
           onAddGame={addGame}
           onRemoveGame={removeGame}
         />
+      )}
+
+      {showAddGame && (
+        <AddGameDialog
+          onConfirm={handleAddGame}
+          onCancel={() => setShowAddGame(false)}
+        />
+      )}
+
+      {gameExitedMsg && (
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white px-6 py-3 rounded-lg shadow-lg text-sm">
+          Game exited — returning to menu
+        </div>
       )}
     </div>
   );

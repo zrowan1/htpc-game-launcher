@@ -19,7 +19,13 @@ export function useKeyboard() {
       KeyY: 'Y',
     };
 
+    const isInputFocused = () => {
+      const tag = document.activeElement?.tagName;
+      return tag === 'INPUT' || tag === 'TEXTAREA';
+    };
+
     const handleKeyDown = (e) => {
+      if (isInputFocused()) return;
       if (keysHeld.has(e.code)) return;
       keysHeld.add(e.code);
       const button = KEY_TO_BUTTON[e.code];
