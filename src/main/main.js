@@ -39,7 +39,18 @@ ipcMain.handle('load-games', () => gameManager.loadGames());
 ipcMain.handle('save-games', (_event, data) => gameManager.saveGames(data));
 ipcMain.handle('add-game', (_event, game) => gameManager.addGame(game));
 ipcMain.handle('remove-game', (_event, gameId) => gameManager.removeGame(gameId));
-ipcMain.handle('launch-game', (_event, game) => gameManager.launchGame(game));
+ipcMain.handle('launch-game', (_event, game) => {
+  gameManager.launchGame(game, () => {
+    // Notify renderer and refocus window after a short delay
+    setTimeout(() => {
+      if (mainWindow) {
+        mainWindow.webContents.send('game-exited');
+        mainWindow.focus();
+      }
+    }, 2000);
+  });
+});
+ipcMain.handle('quit-app', () => app.quit());
 
 app.on('ready', createWindow);
 

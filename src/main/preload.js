@@ -7,4 +7,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
   addGame: (game) => ipcRenderer.invoke('add-game', game),
   removeGame: (gameId) => ipcRenderer.invoke('remove-game', gameId),
   launchGame: (game) => ipcRenderer.invoke('launch-game', game),
+  quitApp: () => ipcRenderer.invoke('quit-app'),
+  // Returns a cleanup function to remove the listener
+  onGameExited: (callback) => {
+    ipcRenderer.on('game-exited', callback);
+    return () => ipcRenderer.removeListener('game-exited', callback);
+  },
 });

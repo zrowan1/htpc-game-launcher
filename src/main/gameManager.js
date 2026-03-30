@@ -72,14 +72,18 @@ function removeGame(gameId) {
   writeGamesFile(data);
 }
 
-function launchGame(game) {
+function launchGame(game, onExit) {
   if (game.launcher === 'steam') {
     shell.openExternal(`steam://rungameid/${game.steamAppId}`);
+    // Steam games are managed externally; process monitoring not available
   } else if (game.exePath) {
     // Quote path to handle spaces; exec on Windows uses cmd.exe
-    exec(`"${game.exePath}"`, (err) => {
+    const child = exec(`"${game.exePath}"`, (err) => {
       if (err) console.error(`Failed to launch ${game.title}:`, err.message);
     });
+    if (onExit) {
+      child.on('exit', () => onExit());
+    }
   }
 }
 
