@@ -1,11 +1,13 @@
 import React from 'react';
 
-export default function GameCard({ game, isSelected }) {
+export default function GameCard({ game, isSelected, onClick, onDoubleClick }) {
   return (
     <div
       className={`p-4 bg-gray-800 rounded-lg cursor-pointer transition-all ${
         isSelected ? 'game-card-selected' : 'hover:bg-gray-700'
       }`}
+      onClick={onClick}
+      onDoubleClick={onDoubleClick}
     >
       <div className="w-full h-32 bg-gray-700 rounded mb-2"></div>
       <h3 className="text-sm font-semibold truncate">{game.title}</h3>
