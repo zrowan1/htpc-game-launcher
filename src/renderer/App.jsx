@@ -10,6 +10,7 @@ export default function App() {
   const [showSettings, setShowSettings] = useState(false);
   const [showAddGame, setShowAddGame] = useState(false);
   const [gameExitedMsg, setGameExitedMsg] = useState(false);
+  const [toastMsg, setToastMsg] = useState(null);
   const { games, addGame, removeGame, refreshSteamLibrary } = useGames();
   const gamepadState = useGamepad();
   const keyboardState = useKeyboard();
@@ -55,12 +56,19 @@ export default function App() {
     setShowAddGame(false);
   };
 
+  const handleRefreshSteam = async () => {
+    await refreshSteamLibrary();
+    setShowSettings(false);
+    setToastMsg('Steam library refreshed');
+    setTimeout(() => setToastMsg(null), 3000);
+  };
+
   return (
     <div className="w-screen h-screen bg-gray-900 text-white">
       {showSettings ? (
         <SettingsMenu
           onClose={() => setShowSettings(false)}
-          onRefreshSteam={refreshSteamLibrary}
+          onRefreshSteam={handleRefreshSteam}
         />
       ) : (
         <GameGrid
@@ -78,9 +86,9 @@ export default function App() {
         />
       )}
 
-      {gameExitedMsg && (
+      {(gameExitedMsg || toastMsg) && (
         <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white px-6 py-3 rounded-lg shadow-lg text-sm">
-          Game exited — returning to menu
+          {gameExitedMsg ? 'Game exited — returning to menu' : toastMsg}
         </div>
       )}
     </div>
