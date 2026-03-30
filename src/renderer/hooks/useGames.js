@@ -51,9 +51,7 @@ export function useGames() {
     setGames((prev) => prev.filter((g) => g.id !== gameId));
   }, []);
 
-  const refreshSteamLibrary = useCallback(() => {
-    loadAll();
-  }, [loadAll]);
+  const refreshSteamLibrary = useCallback(() => loadAll(), [loadAll]);
 
   return { games, addGame, removeGame, refreshSteamLibrary };
 }
