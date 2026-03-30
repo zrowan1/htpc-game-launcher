@@ -1,6 +1,8 @@
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const isDev = require('electron-is-dev');
+const steamParser = require('./steamLibraryParser');
+const gameManager = require('./gameManager');
 
 let mainWindow;
 
@@ -30,6 +32,14 @@ function createWindow() {
     mainWindow = null;
   });
 }
+
+// IPC handlers
+ipcMain.handle('get-steam-games', () => steamParser.getSteamGames());
+ipcMain.handle('load-games', () => gameManager.loadGames());
+ipcMain.handle('save-games', (_event, data) => gameManager.saveGames(data));
+ipcMain.handle('add-game', (_event, game) => gameManager.addGame(game));
+ipcMain.handle('remove-game', (_event, gameId) => gameManager.removeGame(gameId));
+ipcMain.handle('launch-game', (_event, game) => gameManager.launchGame(game));
 
 app.on('ready', createWindow);
 

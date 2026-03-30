@@ -1,6 +1,4 @@
-// TODO: Implement Steam library parsing
-export function getSteamGames() {
-  // Parse libraryfolders.vdf
-  // Return array of games
-  return [];
+export async function getSteamGames() {
+  if (!window.electronAPI) return []; // Graceful fallback in browser/dev
+  return window.electronAPI.getSteamGames();
 }
