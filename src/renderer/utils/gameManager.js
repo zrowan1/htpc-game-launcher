@@ -1,12 +1,21 @@
-// TODO: Implement game launch and management
-export function launchGame(game) {
-  // Launch Steam or exe game
+const api = () => window.electronAPI;
+
+export async function loadGames() {
+  if (!api()) return { games: [] };
+  return api().loadGames();
 }
 
-export function loadGamesFromFile() {
-  // Load games.json
+export async function addGame(game) {
+  if (!api()) return game;
+  return api().addGame(game);
 }
 
-export function saveGamesToFile(games) {
-  // Save games.json
+export async function removeGame(gameId) {
+  if (!api()) return;
+  return api().removeGame(gameId);
+}
+
+export async function launchGame(game) {
+  if (!api()) return;
+  return api().launchGame(game);
 }
