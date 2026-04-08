@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import GameCard from './GameCard';
-import { launchGame } from '../utils/gameManager';
+import { launchGame } from '../services/gameApi';
+import { GRID_CONFIG } from '../../shared/constants';
+import { detectDpadMovement, wasButtonJustPressed } from '../utils/gamepadUtils';
 
-const COLS = 6;
+const COLS = GRID_CONFIG.COLUMNS;
 
-export default function GameGrid({ games, gamepadState, onAddGame, onRemoveGame }) {
+export default function GameGrid({ games, gamepadState, keyboardState, onAddGame, onRemoveGame }) {
   const [selectedIndex, setSelectedIndex] = useState(0);
 
   // Refs so keyboard/gamepad handlers always see current values without re-registering
@@ -63,15 +65,24 @@ export default function GameGrid({ games, gamepadState, onAddGame, onRemoveGame 
     const total = gamesRef.current.length;
 
     if (total > 0) {
-      if (axes[6] === 1 && prev[6] !== 1)
-        setSelectedIndex((i) => (i + 1) % total);
-      else if (axes[6] === -1 && prev[6] !== -1)
-        setSelectedIndex((i) => (i - 1 + total) % total);
-
-      if (axes[7] === 1 && prev[7] !== 1)
-        setSelectedIndex((i) => Math.min(i + COLS, total - 1));
-      else if (axes[7] === -1 && prev[7] !== -1)
-        setSelectedIndex((i) => Math.max(i - COLS, 0));
+      const { direction, moved } = detectDpadMovement(prev, axes);
+      
+      if (moved) {
+        switch (direction) {
+          case 'right':
+            setSelectedIndex((i) => (i + 1) % total);
+            break;
+          case 'left':
+            setSelectedIndex((i) => (i - 1 + total) % total);
+            break;
+          case 'down':
+            setSelectedIndex((i) => Math.min(i + COLS, total - 1));
+            break;
+          case 'up':
+            setSelectedIndex((i) => Math.max(i - COLS, 0));
+            break;
+        }
+      }
     }
 
     prevAxesRef.current = axes;
@@ -83,7 +94,7 @@ export default function GameGrid({ games, gamepadState, onAddGame, onRemoveGame 
     const pressed = gamepadState.buttonsPressed;
     const prev = prevButtonsRef.current;
 
-    if (pressed.A && !prev.A) {
+    if (wasButtonJustPressed(prev, pressed, 'A')) {
       const game = gamesRef.current[selectedIndexRef.current];
       if (game) launchGame(game);
     }

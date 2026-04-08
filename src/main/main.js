@@ -1,11 +1,27 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+/**
+ * Main Process Entry Point
+ * 
+ * This is the Electron main process entry point.
+ * It creates the application window and registers all IPC handlers.
+ * 
+ * Architecture:
+ * - main.js: Entry point, window management
+ * - ipcHandlers.js: All IPC communication registration
+ * - services/: Business logic (gameService, steamService)
+ * 
+ * @module main
+ */
+
+const { app, BrowserWindow } = require('electron');
 const path = require('path');
 const isDev = require('electron-is-dev');
-const steamParser = require('./steamLibraryParser');
-const gameManager = require('./gameManager');
+const { registerIpcHandlers } = require('./ipcHandlers');
 
 let mainWindow;
 
+/**
+ * Create the main application window
+ */
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1920,
@@ -15,53 +31,54 @@ function createWindow() {
       preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: false,
       contextIsolation: true,
+      enableRemoteModule: false, // Security: disable remote module
     },
   });
 
+  // Determine start URL based on environment
   const startUrl = isDev
     ? 'http://localhost:3000'
     : `file://${path.join(__dirname, '../renderer/index.html')}`;
 
   mainWindow.loadURL(startUrl);
 
+  // Open DevTools in development mode
   if (isDev) {
     mainWindow.webContents.openDevTools();
   }
 
+  // Handle window close
   mainWindow.on('closed', () => {
     mainWindow = null;
   });
 }
 
-// IPC handlers
-ipcMain.handle('get-steam-games', () => steamParser.getSteamGames());
-ipcMain.handle('load-games', () => gameManager.loadGames());
-ipcMain.handle('save-games', (_event, data) => gameManager.saveGames(data));
-ipcMain.handle('add-game', (_event, game) => gameManager.addGame(game));
-ipcMain.handle('remove-game', (_event, gameId) => gameManager.removeGame(gameId));
-ipcMain.handle('launch-game', (_event, game) => {
-  gameManager.launchGame(game, () => {
-    // Notify renderer and refocus window after a short delay
-    setTimeout(() => {
-      if (mainWindow) {
-        mainWindow.webContents.send('game-exited');
-        mainWindow.focus();
-      }
-    }, 2000);
-  });
-});
-ipcMain.handle('quit-app', () => app.quit());
+// Application lifecycle events
 
-app.on('ready', createWindow);
+app.on('ready', () => {
+  console.log('[Main] App ready, creating window...');
+  createWindow();
+  registerIpcHandlers(mainWindow);
+});
 
 app.on('window-all-closed', () => {
+  // On macOS, apps typically stay running until explicitly quit
   if (process.platform !== 'darwin') {
     app.quit();
   }
 });
 
 app.on('activate', () => {
+  // On macOS, re-create window when dock icon is clicked
   if (mainWindow === null) {
     createWindow();
   }
+});
+
+// Security: Prevent new window creation
+app.on('web-contents-created', (_event, contents) => {
+  contents.on('new-window', (event) => {
+    event.preventDefault();
+    console.warn('[Main] Blocked new window creation');
+  });
 });
