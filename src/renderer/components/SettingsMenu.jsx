@@ -5,7 +5,6 @@ export default function SettingsMenu({ onClose, onRefreshSteam }) {
   const [autoStartEnabled, setAutoStartEnabled] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Load autostart status on mount
   useEffect(() => {
     const loadStatus = async () => {
       try {
@@ -20,10 +19,6 @@ export default function SettingsMenu({ onClose, onRefreshSteam }) {
     loadStatus();
   }, []);
 
-  const handleExit = () => {
-    window.electronAPI?.quitApp();
-  };
-
   const handleToggleAutoStart = async () => {
     try {
       const result = await toggleAutoStart();
@@ -36,46 +31,54 @@ export default function SettingsMenu({ onClose, onRefreshSteam }) {
   };
 
   return (
-    <div className="w-full h-full bg-gray-900 p-8 flex flex-col">
-      <h1 className="text-4xl font-bold mb-8">Settings</h1>
+    <div className="w-full h-full p-8 flex flex-col">
+      <h1 className="text-5xl font-bold mb-8 text-white/95">Settings</h1>
       
-      <button
-        onClick={onRefreshSteam}
-        className="px-4 py-2 bg-blue-600 rounded mb-4 hover:bg-blue-700 text-left"
-      >
-        Refresh Steam Library
-      </button>
-      
-      <button
-        onClick={handleToggleAutoStart}
-        disabled={loading}
-        className={`px-4 py-2 rounded mb-4 text-left transition-colors ${
-          autoStartEnabled 
-            ? 'bg-green-600 hover:bg-green-700' 
-            : 'bg-gray-600 hover:bg-gray-700'
-        }`}
-      >
-        {loading 
-          ? 'Loading...' 
-          : autoStartEnabled 
-            ? 'Auto Start: ON (Click to Disable)' 
-            : 'Auto Start: OFF (Click to Enable)'
-        }
-      </button>
-      
-      <button
-        onClick={handleExit}
-        className="px-4 py-2 bg-orange-600 rounded mb-4 hover:bg-orange-700 text-left"
-      >
-        Exit to Desktop
-      </button>
-      
-      <button
-        onClick={onClose}
-        className="px-4 py-2 bg-red-600 rounded hover:bg-red-700 text-left"
-      >
-        Back (B Button / Esc)
-      </button>
+      <div className="glass-card rounded-2xl p-6 max-w-md">
+        <button
+          onClick={onRefreshSteam}
+          className="w-full button-glass button-primary mb-4 text-left"
+        >
+          Refresh Steam Library
+        </button>
+        
+        <button
+          onClick={handleToggleAutoStart}
+          disabled={loading}
+          className={`w-full button-glass mb-4 text-left transition-colors ${
+            autoStartEnabled 
+              ? 'bg-green-500/20 border-green-400/40' 
+              : 'bg-white/5 border-white/10'
+          }`}
+        >
+          {loading 
+            ? 'Loading...' 
+            : autoStartEnabled 
+              ? 'Auto Start: ON' 
+              : 'Auto Start: OFF'
+          }
+        </button>
+      </div>
+
+      <div className="mt-auto">
+        <p className="text-white/40 text-sm mb-4">
+          Power Options
+        </p>
+        <div className="glass-card rounded-2xl p-6 max-w-md">
+          <button
+            onClick={() => window.electronAPI?.quitApp()}
+            className="w-full button-glass mb-3 text-left text-orange-300/80"
+          >
+            Exit to Desktop
+          </button>
+          <button
+            onClick={onClose}
+            className="w-full button-glass text-left"
+          >
+            Back (B Button / Esc)
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

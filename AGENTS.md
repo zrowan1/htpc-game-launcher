@@ -1,8 +1,16 @@
 # AGENTS.md - AI Agent Guidelines for HTPC Game Launcher
 
-## Overview
+## Project Goal
 
-This document provides guidelines for AI agents working on the HTPC Game Launcher project. Following these conventions ensures consistency and maintainability.
+Een **SteamOS-achtige console-ervaring** op Windows PC voor gebruik op de TV. De app moet volledig bestuurbaar zijn met een gamepad en werken als een volwaardig living room gaming systeem.
+
+### Kernfunctionaliteit
+- Volledig met gamepad te bedienen (geen muis nodig)
+- TV-vriendelijke UI (grote tekst, hoge contrast, duidelijke focus indicators)
+- Game launching (Steam + EXE)
+- Systeem power opties
+
+---
 
 ## UI/UX Design System - Liquid Glass
 
@@ -545,17 +553,82 @@ module.exports = {
 - Vergeet focus indicators voor toetsenbord
 - Gebruik harde schaduwen (soft only)
 
-## Architecture Overview
+---
 
-This document provides guidelines for AI agents working on the HTPC Game Launcher project. Following these conventions ensures consistency and maintainability.
+## Features
 
-## Architecture Overview
+De HTPC Game Launcher evolueert naar een volwaardige SteamOS-achtige console-ervaring. Hieronder de geplande en geïmplementeerde features.
+
+### Fase 1 - Visuele Upgrade (Basis)
+- [x] Volledige Liquid Glass achtergrond met gradients
+- [x] Ambient orbs voor diepte
+- [x] Glass morphism op game cards
+- [x] Focus state met glow animatie
+- [x] TV-vriendelijke tekst maten
+
+### Fase 2 - Console Features
+- [x] Gamepad navigatie (D-pad, A/B/X/Y knoppen)
+- [x] Keyboard fallback (arrow keys, Enter, Escape)
+- [x] Settings menu (B-toets)
+- [x] Add game dialog (Y-toets)
+- [ ] Power menu (sleep, reboot, shutdown)
+- [ ] Game collections/favorieten
+- [ ] Zoeken/filteren
+- [ ] Soepele navigatie animaties
+
+### Fase 3 - Steam Deck Features
+- [ ] Game details overlay (playtime, laatst gespeeld)
+- [ ] Audio feedback bij navigeren
+- [ ] Install/verwijder games via UI
+- [ ] Store integratie (optioneel)
+
+### Fase 4 - Geavanceerde Features
+- [ ] Screenshots/screenshare
+- [ ] Streaming (Steam Remote Play)
+- [ ] Controller firmware updates
+- [ ] Systeem updates
+
+---
+
+## Component Overview
 
 This is an Electron + React application with a clear separation between:
 
 - **Main Process** (`src/main/`): Node.js environment, file system access, system integration
 - **Renderer Process** (`src/renderer/`): React UI, browser environment
 - **Shared** (`src/shared/`): Constants and types used by both processes
+
+---
+
+## Controller & Input
+
+De app moet volledig bestuurbaar zijn met een gamepad. Keyboard dient als fallback.
+
+### Button Mapping
+
+| Gamepad | Toets | Actie |
+|--------|------|-------|
+| A | Enter | Start game / Bevestig |
+| B | Escape | Terug / Annuleren |
+| Y | - | Add new game |
+| D-pad | Arrow keys | Navigeren |
+| LB/RB | Page Up/Down | Vorige/volgende rij |
+| Start | - | Settings menu |
+
+### State Management
+
+```javascript
+// Gamepad state hook
+const { buttonsPressed, axes, isConnected } = useGamepad();
+
+// Keyboard state hook
+const { buttonsPressed, isActive } = useKeyboard();
+
+// Edge detection voor D-pad beweging
+const { direction, moved } = detectDpadMovement(prevAxes, currentAxes);
+```
+
+---
 
 ## Directory Structure
 
@@ -567,29 +640,40 @@ src/
 │   ├── ipcHandlers.js         # IPC handler registration
 │   └── services/              # Business logic
 │       ├── gameService.js     # Game CRUD + launching
-│       └── steamService.js    # Steam integration
+│       ├── steamService.js    # Steam integration
+│       └── autoStartService.js # Auto-start on login
 ├── renderer/                   # React UI
 │   ├── index.jsx              # React entry
+│   ├── index.css              # Global styles + Liquid Glass
 │   ├── App.jsx                # Root component
 │   ├── components/            # React components
 │   │   ├── error-boundaries/  # Error handling
-│   │   ├── GameGrid.jsx
-│   │   ├── GameCard.jsx
-│   │   ├── SettingsMenu.jsx
-│   │   └── AddGameDialog.jsx
+│   │   │   └── ErrorBoundary.jsx
+│   │   ├── GameGrid.jsx       # Main game grid
+│   │   ├── GameCard.jsx       # Individual game card
+│   │   ├── SettingsMenu.jsx   # Settings panel (B-button)
+│   │   ├── AddGameDialog.jsx  # Add new game (Y-button)
+│   │   └── VirtualKeyboard.jsx # On-screen keyboard for text input
 │   ├── hooks/                 # Custom React hooks
-│   │   ├── useGames.js
-│   │   ├── useGamepad.js
-│   │   └── useKeyboard.js
+│   │   ├── useGames.js        # Game state management
+│   │   ├── useGamepad.js      # Gamepad input handling
+│   │   └── useKeyboard.js     # Keyboard input handling
 │   ├── services/              # API layer (calls main process)
-│   │   ├── gameApi.js
-│   │   ├── steamApi.js
-│   │   └── appApi.js
+│   │   ├── gameApi.js         # Game operations
+│   │   ├── steamApi.js        # Steam operations
+│   │   ├── appApi.js          # App-level operations
+│   │   └── mockApi.js         # Mock API for web dev
 │   └── utils/                 # Pure utility functions
-│       ├── gameUtils.js
-│       └── gamepadUtils.js
-└── shared/                     # Shared constants
-    └── constants.js           # ALL constants in one place
+│       ├── gameUtils.js       # Game data helpers
+│       └── gamepadUtils.js    # Gamepad input helpers
+├── shared/                     # Shared constants
+│   └── constants.js           # ALL constants in one place
+├── data/                       # Runtime data storage
+│   └── games.json             # Game library data
+├── scripts/                    # Build/maintenance scripts
+│   └── refresh-steam.js       # Steam library refresh
+└── public/                     # Static assets
+    └── index.html             # HTML entry point
 ```
 
 ## Naming Conventions
@@ -777,9 +861,9 @@ function launchGame(game, onExit) { ... }
 
 Before committing:
 
-1. **Linting**: Run `npm run lint` if available
-2. **Type checking**: Run `npm run typecheck` if using TypeScript
-3. **Functional testing**: Test in the actual app
+1. **Build the app**: `npm run build` and test the executable
+2. **In dev mode**: Run `npm start` to test Electron directly
+3. **Web dev mode**: Run `npm run dev:web` to test in browser without Electron
 4. **No console errors**: Check DevTools for warnings
 
 ## Common Pitfalls

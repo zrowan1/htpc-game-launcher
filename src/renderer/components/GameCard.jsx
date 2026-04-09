@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-export default function GameCard({ game, isSelected, onClick, onDoubleClick }) {
+export default function GameCard({ game, isSelected, index = 0, onClick, onDoubleClick }) {
   const [imageError, setImageError] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
 
@@ -23,17 +23,18 @@ export default function GameCard({ game, isSelected, onClick, onDoubleClick }) {
 
   return (
     <div
-      className={`relative rounded-xl overflow-hidden cursor-pointer transition-all duration-300 glass-card ${
-        isSelected ? 'game-card-selected' : 'hover:scale-[1.02] hover:translate-y-[-4px]'
+      className={`relative rounded-2xl overflow-hidden cursor-pointer game-card glass-card game-card-animate ${
+        isSelected ? 'game-card-selected' : ''
       }`}
+      style={{ animationDelay: `${index * 50}ms` }}
       onClick={onClick}
       onDoubleClick={onDoubleClick}
     >
-      <div className="aspect-[3/4] relative bg-gray-900/50">
+      <div className="aspect-[3/4] relative bg-white/5">
         {showImage ? (
           <>
             {!imageLoaded && (
-              <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-900 animate-pulse" />
+              <div className="absolute inset-0 loading-shimmer" />
             )}
             <img
               src={imageUrl}
@@ -46,9 +47,9 @@ export default function GameCard({ game, isSelected, onClick, onDoubleClick }) {
             />
           </>
         ) : (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-gray-800/50 to-gray-900/80">
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-white/5 to-white/[0.02]">
             <svg
-              className="w-16 h-16 text-gray-600 mb-3"
+              className="w-16 h-16 text-white/30 mb-3"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -60,7 +61,7 @@ export default function GameCard({ game, isSelected, onClick, onDoubleClick }) {
                 d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z"
               />
             </svg>
-            <span className="text-gray-500 text-sm text-center px-4 line-clamp-2">
+            <span className="text-white/50 text-base text-center px-4 line-clamp-2">
               {game.title}
             </span>
           </div>
@@ -69,11 +70,11 @@ export default function GameCard({ game, isSelected, onClick, onDoubleClick }) {
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
         
         <div className="absolute bottom-0 left-0 right-0 p-4">
-          <h3 className="text-white font-semibold text-lg truncate drop-shadow-lg">
+          <h3 className="text-white/95 font-semibold text-xl truncate drop-shadow-lg">
             {game.title}
           </h3>
-          <div className="flex items-center gap-2 mt-1">
-            <span className={`text-xs px-2 py-0.5 rounded-full ${
+          <div className="flex items-center gap-2 mt-2">
+            <span className={`text-xs px-3 py-1 rounded-full font-medium ${
               game.launcher === 'steam' 
                 ? 'bg-blue-500/30 text-blue-300' 
                 : 'bg-green-500/30 text-green-300'

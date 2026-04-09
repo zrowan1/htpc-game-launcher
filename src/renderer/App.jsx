@@ -9,15 +9,6 @@ import { useGames } from './hooks/useGames';
 import { onGameExited } from './services/appApi';
 import { TOAST_DURATION } from '../shared/constants';
 
-/**
- * Root Application Component
- * 
- * Wraps the app with ErrorBoundary and manages global state:
- * - Settings menu visibility
- * - Add game dialog visibility
- * - Toast messages
- * - Game exit notifications
- */
 export default function App() {
   return (
     <ErrorBoundary>
@@ -26,10 +17,6 @@ export default function App() {
   );
 }
 
-/**
- * Main app content component
- * Separated to allow ErrorBoundary to catch errors
- */
 function AppContent() {
   const [showSettings, setShowSettings] = useState(false);
   const [showAddGame, setShowAddGame] = useState(false);
@@ -40,20 +27,18 @@ function AppContent() {
   const gamepadState = useGamepad();
   const keyboardState = useKeyboard();
 
-  // B button: toggle settings (only when add-game dialog is closed)
   useEffect(() => {
     if (gamepadState.buttonsPressed.B && !showAddGame) {
-      setShowSettings((prev) => !prev);
+      setShowSettings(prev => !prev);
     }
   }, [gamepadState.buttonsPressed.B, showAddGame]);
 
   useEffect(() => {
     if (keyboardState.buttonsPressed.B && !showAddGame) {
-      setShowSettings((prev) => !prev);
+      setShowSettings(prev => !prev);
     }
   }, [keyboardState.buttonsPressed.B, showAddGame]);
 
-  // Y button: open add-game dialog (only on main grid)
   useEffect(() => {
     if (gamepadState.buttonsPressed.Y && !showSettings) {
       setShowAddGame(true);
@@ -66,7 +51,6 @@ function AppContent() {
     }
   }, [keyboardState.buttonsPressed.Y, showSettings]);
 
-  // Listen for game-exited IPC event (exe games only)
   useEffect(() => {
     const cleanup = onGameExited(() => {
       setGameExitedMsg(true);
@@ -76,11 +60,8 @@ function AppContent() {
   }, []);
 
   const handleAddGame = async (gameData) => {
-    console.log('[App] handleAddGame called, coverUrl:', gameData.coverUrl);
-    
     await addGame(gameData);
     await reload();
-    
     setShowAddGame(false);
   };
 
@@ -91,29 +72,34 @@ function AppContent() {
     setTimeout(() => setToastMsg(null), TOAST_DURATION);
   };
 
-  // Show loading state
   if (loading) {
     return (
-      <div className="w-screen h-screen bg-gray-900 text-white flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-xl">Loading games...</p>
+      <div className="relative w-screen h-screen text-white flex items-center justify-center">
+        <div className="app-background">
+          <div className="ambient-orb ambient-orb-1" />
+          <div className="ambient-orb ambient-orb-2" />
+          <div className="ambient-orb ambient-orb-3" />
+        </div>
+        <div className="relative z-10 text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-400 mx-auto mb-4"></div>
+          <p className="text-xl text-white/80">Loading games...</p>
         </div>
       </div>
     );
   }
 
-  // Show error state
   if (error) {
     return (
-      <div className="w-screen h-screen bg-gray-900 text-white flex items-center justify-center">
-        <div className="text-center max-w-md p-8 bg-gray-800 rounded-lg">
+      <div className="relative w-screen h-screen text-white flex items-center justify-center">
+        <div className="app-background">
+          <div className="ambient-orb ambient-orb-1" />
+          <div className="ambient-orb ambient-orb-2" />
+          <div className="ambient-orb ambient-orb-3" />
+        </div>
+        <div className="relative z-10 text-center max-w-md p-8 glass-card rounded-2xl">
           <h1 className="text-2xl font-bold text-red-400 mb-4">Error Loading Games</h1>
-          <p className="text-gray-300 mb-4">{error}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="px-6 py-2 bg-blue-600 hover:bg-blue-700 rounded font-medium"
-          >
+          <p className="text-white/70 mb-6">{error}</p>
+          <button onClick={() => window.location.reload()} className="button-glass button-primary">
             Reload
           </button>
         </div>
@@ -122,21 +108,29 @@ function AppContent() {
   }
 
   return (
-    <div className="w-screen h-screen bg-gray-900 text-white overflow-hidden">
-      {showSettings ? (
-        <SettingsMenu
-          onClose={() => setShowSettings(false)}
-          onRefreshSteam={handleRefreshSteam}
-        />
-      ) : (
-        <GameGrid
-          games={games}
-          gamepadState={gamepadState}
-          keyboardState={keyboardState}
-          onAddGame={addGame}
-          onRemoveGame={removeGame}
-        />
-      )}
+    <div className="relative w-screen h-screen text-white overflow-hidden">
+      <div className="app-background">
+        <div className="ambient-orb ambient-orb-1" />
+        <div className="ambient-orb ambient-orb-2" />
+        <div className="ambient-orb ambient-orb-3" />
+      </div>
+
+      <div className="relative z-10">
+        {showSettings ? (
+          <SettingsMenu
+            onClose={() => setShowSettings(false)}
+            onRefreshSteam={handleRefreshSteam}
+          />
+        ) : (
+          <GameGrid
+            games={games}
+            gamepadState={gamepadState}
+            keyboardState={keyboardState}
+            onAddGame={addGame}
+            onRemoveGame={removeGame}
+          />
+        )}
+      </div>
 
       {showAddGame && (
         <AddGameDialog
@@ -146,8 +140,8 @@ function AppContent() {
       )}
 
       {(gameExitedMsg || toastMsg) && (
-        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white px-6 py-3 rounded-lg shadow-lg text-sm z-50">
-          {gameExitedMsg ? 'Game exited — returning to menu' : toastMsg}
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 toast px-6 py-3 text-sm z-50">
+          {gameExitedMsg ? 'Game exited - returning to menu' : toastMsg}
         </div>
       )}
     </div>

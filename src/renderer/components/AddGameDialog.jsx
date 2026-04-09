@@ -174,34 +174,23 @@ export default function AddGameDialog({ onConfirm, onCancel }) {
 
   return (
     <div 
-      className="fixed inset-0 flex items-center justify-center z-50"
-      style={{ background: 'rgba(0, 0, 0, 0.85)' }}
+      className="modal-overlay flex items-center justify-center z-50"
       onClick={(e) => {
         if (e.target === e.currentTarget) onCancel();
       }}
     >
       <div 
         ref={dialogRef}
-        className="relative w-full max-w-2xl max-h-[90vh] overflow-hidden rounded-3xl"
-        style={{
-          background: 'linear-gradient(180deg, rgba(25, 25, 40, 0.98) 0%, rgba(15, 15, 25, 1) 100%)',
-          backdropFilter: 'blur(40px)',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-          boxShadow: '0 25px 80px rgba(0, 0, 0, 0.6)',
-        }}
+        className="settings-sheet relative w-full max-w-2xl max-h-[90vh] overflow-hidden rounded-3xl"
       >
         <div className="p-6 pb-4">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-white">Add Game</h2>
+            <h2 className="text-3xl font-bold text-white/95">Add Game</h2>
             <button
               onClick={onCancel}
-              className="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-110"
-              style={{
-                background: 'rgba(255, 255, 255, 0.1)',
-                border: '1px solid rgba(255, 255, 255, 0.15)',
-              }}
+              className="w-10 h-10 rounded-full flex items-center justify-center glass-card hover:bg-white/10 transition-all"
             >
-              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
@@ -209,7 +198,7 @@ export default function AddGameDialog({ onConfirm, onCancel }) {
 
           <div className="space-y-4">
             <div>
-              <label className="text-sm text-gray-400 mb-2 block">Game Title *</label>
+              <label className="text-base text-white/60 mb-2 block">Game Title *</label>
               <div className="flex gap-2">
                 <div className="flex-1 relative">
                   <input
@@ -218,39 +207,31 @@ export default function AddGameDialog({ onConfirm, onCancel }) {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search for a game..."
-                    className="w-full rounded-xl px-4 py-3 pr-12 text-white outline-none"
-                    style={{
-                      background: 'rgba(0, 0, 0, 0.4)',
-                      border: '1px solid rgba(255, 255, 255, 0.15)',
-                    }}
+                    className="w-full rounded-xl px-4 py-3 pr-12 text-white outline-none bg-white/5 border border-white/10"
                   />
                   {isSearching && (
                     <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <div className="w-5 h-5 border-2 border-white/60 border-t-transparent rounded-full animate-spin" />
                     </div>
                   )}
                 </div>
                 <button
                   onClick={() => openKeyboard('search')}
-                  className="px-4 py-3 rounded-xl transition-all duration-200 hover:scale-105"
-                  style={{
-                    background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.06) 100%)',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                  }}
+                  className="button-glass px-4"
                 >
                   <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
                   </svg>
                 </button>
               </div>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-sm text-white/40 mt-1">
                 Start typing to search for game covers
               </p>
             </div>
 
             {searchResults.length > 0 && (
               <div>
-                <label className="text-sm text-gray-400 mb-2 block">
+                <label className="text-base text-white/60 mb-2 block">
                   Search Results (D-pad to navigate, Enter to select)
                 </label>
                 <div 
@@ -265,21 +246,9 @@ export default function AddGameDialog({ onConfirm, onCancel }) {
                       <div
                         key={game.id}
                         onClick={() => handleGameSelect(game)}
-                        className={`
-                          relative rounded-xl overflow-hidden cursor-pointer
-                          transition-all duration-200 select-none
-                          ${isFocused ? 'scale-105 ring-2 ring-accent-primary z-10' : 'hover:scale-102'}
-                        `}
-                        style={{
-                          background: 'rgba(0, 0, 0, 0.4)',
-                          border: isFocused 
-                            ? '2px solid rgba(120, 180, 255, 0.8)'
-                            : '1px solid rgba(255, 255, 255, 0.1)',
-                          boxShadow: isFocused 
-                            ? '0 0 25px rgba(120, 180, 255, 0.5)'
-                            : '0 4px 12px rgba(0, 0, 0, 0.3)',
-                          aspectRatio: '3/4',
-                        }}
+                        className={`game-card relative rounded-xl overflow-hidden cursor-pointer transition-all duration-200 select-none ${
+                          isFocused ? 'game-card-selected' : ''
+                        }`}
                       >
                         {coverUrl ? (
                           <img
@@ -291,14 +260,14 @@ export default function AddGameDialog({ onConfirm, onCancel }) {
                             }}
                           />
                         ) : (
-                          <div className="absolute inset-0 flex items-center justify-center bg-gray-800">
-                            <svg className="w-8 h-8 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <div className="absolute inset-0 flex items-center justify-center bg-white/5">
+                            <svg className="w-8 h-8 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                             </svg>
                           </div>
                         )}
                         <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/90 via-black/60 to-transparent">
-                          <p className="text-white text-xs font-medium truncate">
+                          <p className="text-white text-sm font-medium truncate">
                             {game.title}
                           </p>
                         </div>
@@ -311,15 +280,10 @@ export default function AddGameDialog({ onConfirm, onCancel }) {
 
             {selectedCover && (
               <div>
-                <label className="text-sm text-gray-400 mb-2 block">Selected Game Preview</label>
+                <label className="text-base text-white/60 mb-2 block">Selected Game Preview</label>
                 <div 
-                  className="relative rounded-xl overflow-hidden"
-                  style={{
-                    width: '180px',
-                    background: 'rgba(0, 0, 0, 0.4)',
-                    border: '1px solid rgba(120, 180, 255, 0.3)',
-                    boxShadow: '0 0 15px rgba(120, 180, 255, 0.2)',
-                  }}
+                  className="relative rounded-xl overflow-hidden glass-card"
+                  style={{ width: '180px' }}
                 >
                   <div style={{ aspectRatio: '16/9' }}>
                     <img
@@ -338,8 +302,7 @@ export default function AddGameDialog({ onConfirm, onCancel }) {
                       setSelectedCover(null);
                       setSelectedGame(null);
                     }}
-                    className="absolute top-2 right-2 w-6 h-6 rounded-full flex items-center justify-center"
-                    style={{ background: 'rgba(255, 100, 100, 0.9)' }}
+                    className="absolute top-2 right-2 w-6 h-6 rounded-full flex items-center justify-center bg-red-500/80"
                   >
                     <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -350,26 +313,18 @@ export default function AddGameDialog({ onConfirm, onCancel }) {
             )}
 
             <div>
-              <label className="text-sm text-gray-400 mb-2 block">Executable Path (optional)</label>
+              <label className="text-base text-white/60 mb-2 block">Executable Path (optional)</label>
               <div className="flex gap-2">
                 <input
                   type="text"
                   value={exePath}
                   onChange={(e) => setExePath(e.target.value)}
                   placeholder="C:\Games\mygame.exe"
-                  className="flex-1 rounded-xl px-4 py-3 text-white outline-none"
-                  style={{
-                    background: 'rgba(0, 0, 0, 0.4)',
-                    border: '1px solid rgba(255, 255, 255, 0.15)',
-                  }}
+                  className="flex-1 rounded-xl px-4 py-3 text-white outline-none bg-white/5 border border-white/10"
                 />
                 <button
                   onClick={() => openKeyboard('exe')}
-                  className="px-4 py-3 rounded-xl transition-all duration-200 hover:scale-105"
-                  style={{
-                    background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.06) 100%)',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                  }}
+                  className="button-glass px-4"
                 >
                   <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
@@ -380,31 +335,17 @@ export default function AddGameDialog({ onConfirm, onCancel }) {
           </div>
         </div>
 
-        <div 
-          className="flex gap-3 p-6 pt-4"
-          style={{ borderTop: '1px solid rgba(255, 255, 255, 0.1)' }}
-        >
+        <div className="flex gap-3 p-6 pt-4 border-t border-white/10">
           <button
             onClick={onCancel}
-            className="flex-1 py-3 rounded-xl font-semibold transition-all duration-200 hover:scale-[1.02]"
-            style={{
-              background: 'rgba(255, 255, 255, 0.1)',
-              border: '1px solid rgba(255, 255, 255, 0.15)',
-              color: 'rgba(255, 255, 255, 0.8)',
-            }}
+            className="flex-1 button-glass"
           >
             Cancel
           </button>
           <button
             onClick={handleConfirm}
             disabled={!searchQuery.trim() && !selectedGame}
-            className="flex-1 py-3 rounded-xl font-semibold transition-all duration-200 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed"
-            style={{
-              background: 'linear-gradient(180deg, rgba(120, 180, 255, 0.3) 0%, rgba(120, 180, 255, 0.15) 100%)',
-              border: '1px solid rgba(120, 180, 255, 0.4)',
-              color: 'white',
-              boxShadow: '0 4px 20px rgba(120, 180, 255, 0.2)',
-            }}
+            className="flex-1 button-glass button-primary disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Add Game
           </button>

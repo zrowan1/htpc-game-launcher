@@ -150,29 +150,18 @@ export default function VirtualKeyboard({
   if (!isOpen) return null;
 
   return (
-    <div 
-      className="fixed bottom-0 left-0 right-0 z-50 glass-card border-t border-white/10"
-      style={{ 
-        background: 'linear-gradient(180deg, rgba(25, 25, 35, 0.98) 0%, rgba(15, 15, 25, 0.99) 100%)',
-        backdropFilter: 'blur(40px)',
-      }}
-    >
+    <div className="fixed bottom-0 left-0 right-0 z-50 settings-sheet border-t border-white/10">
       <div className="max-w-4xl mx-auto px-4 py-4">
         <div className="flex items-center justify-between mb-4">
           <div className="flex-1 mr-4">
-            <div className="bg-black/40 rounded-lg px-4 py-3 text-white text-xl font-mono min-h-[48px] flex items-center border border-white/10">
-              {displayValue || <span className="text-gray-500">Typ hier...</span>}
-              <span className="w-0.5 h-6 bg-accent-primary ml-1 animate-pulse" />
+            <div className="bg-white/5 rounded-xl px-4 py-3 text-white text-xl font-mono min-h-[48px] flex items-center border border-white/10">
+              {displayValue || <span className="text-white/40">Typ hier...</span>}
+              <span className="w-0.5 h-6 bg-blue-400 ml-1 animate-pulse" />
             </div>
           </div>
           <button
             onClick={() => handleKeyPress('Enter')}
-            className="px-6 py-3 rounded-xl font-semibold transition-all duration-200"
-            style={{
-              background: 'linear-gradient(180deg, rgba(120, 180, 255, 0.3) 0%, rgba(120, 180, 255, 0.15) 100%)',
-              border: '1px solid rgba(120, 180, 255, 0.4)',
-              boxShadow: '0 4px 20px rgba(120, 180, 255, 0.2)',
-            }}
+            className="button-glass button-primary px-6"
           >
             Sluiten
           </button>
@@ -199,21 +188,10 @@ export default function VirtualKeyboard({
                       min-w-[48px] h-12 px-3 rounded-lg font-semibold text-lg
                       transition-all duration-150 select-none
                       ${isFocused 
-                        ? 'scale-110 z-10' 
-                        : 'hover:scale-105'
+                        ? 'game-card-selected' 
+                        : 'button-glass'
                       }
                     `}
-                    style={isFocused ? {
-                      background: 'linear-gradient(180deg, rgba(120, 180, 255, 0.5) 0%, rgba(120, 180, 255, 0.3) 100%)',
-                      border: '2px solid rgba(120, 180, 255, 0.8)',
-                      boxShadow: '0 0 20px rgba(120, 180, 255, 0.5), 0 0 40px rgba(120, 180, 255, 0.3)',
-                      transform: 'scale(1.1)',
-                      color: 'white',
-                    } : {
-                      background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.06) 100%)',
-                      border: '1px solid rgba(255, 255, 255, 0.15)',
-                      color: 'rgba(255, 255, 255, 0.9)',
-                    }}
                   >
                     {getKeyDisplay(key)}
                   </button>
@@ -240,21 +218,10 @@ export default function VirtualKeyboard({
                 onClick={() => handleKeyPress(key)}
                 className={`
                   rounded-lg font-semibold transition-all duration-150 select-none
-                  ${isFocused ? 'scale-110 z-10' : 'hover:scale-105'}
+                  ${isFocused ? 'game-card-selected' : 'button-glass'}
                   ${isSpace ? 'min-w-[240px]' : ''}
                 `}
-                style={isFocused ? {
-                  background: 'linear-gradient(180deg, rgba(120, 180, 255, 0.5) 0%, rgba(120, 180, 255, 0.3) 100%)',
-                  border: '2px solid rgba(120, 180, 255, 0.8)',
-                  boxShadow: '0 0 20px rgba(120, 180, 255, 0.5), 0 0 40px rgba(120, 180, 255, 0.3)',
-                  transform: 'scale(1.1)',
-                  color: 'white',
-                  height: '48px',
-                  padding: isSpace ? '0 32px' : '0 24px',
-                } : {
-                  background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.06) 100%)',
-                  border: '1px solid rgba(255, 255, 255, 0.15)',
-                  color: 'rgba(255, 255, 255, 0.9)',
+                style={{
                   height: '48px',
                   padding: isSpace ? '0 32px' : '0 24px',
                 }}
