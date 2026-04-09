@@ -254,7 +254,7 @@ export default function AddGameDialog({ onConfirm, onCancel }) {
                   Search Results (D-pad to navigate, Enter to select)
                 </label>
                 <div 
-                  className="grid gap-3 max-h-[280px] overflow-y-auto p-1"
+                  className="grid gap-4 max-h-[320px] overflow-y-auto p-1"
                   style={{ gridTemplateColumns: `repeat(${COLUMNS}, 1fr)` }}
                 >
                   {searchResults.map((game, index) => {
@@ -276,7 +276,7 @@ export default function AddGameDialog({ onConfirm, onCancel }) {
                             ? '2px solid rgba(120, 180, 255, 0.8)'
                             : '1px solid rgba(255, 255, 255, 0.1)',
                           boxShadow: isFocused 
-                            ? '0 0 20px rgba(120, 180, 255, 0.4)'
+                            ? '0 0 25px rgba(120, 180, 255, 0.5)'
                             : '0 4px 12px rgba(0, 0, 0, 0.3)',
                           aspectRatio: '3/4',
                         }}
@@ -297,7 +297,7 @@ export default function AddGameDialog({ onConfirm, onCancel }) {
                             </svg>
                           </div>
                         )}
-                        <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/90 to-transparent">
+                        <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/90 via-black/60 to-transparent">
                           <p className="text-white text-xs font-medium truncate">
                             {game.title}
                           </p>
@@ -311,29 +311,35 @@ export default function AddGameDialog({ onConfirm, onCancel }) {
 
             {selectedCover && (
               <div>
-                <label className="text-sm text-gray-400 mb-2 block">Selected Cover Preview</label>
+                <label className="text-sm text-gray-400 mb-2 block">Selected Game Preview</label>
                 <div 
                   className="relative rounded-xl overflow-hidden"
                   style={{
-                    width: '160px',
-                    height: '90px',
+                    width: '180px',
                     background: 'rgba(0, 0, 0, 0.4)',
                     border: '1px solid rgba(120, 180, 255, 0.3)',
                     boxShadow: '0 0 15px rgba(120, 180, 255, 0.2)',
                   }}
                 >
-                  <img
-                    src={selectedCover}
-                    alt="Selected cover"
-                    className="w-full h-full object-cover"
-                  />
+                  <div style={{ aspectRatio: '16/9' }}>
+                    <img
+                      src={selectedCover}
+                      alt="Selected cover"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/90 to-transparent">
+                    <p className="text-white text-sm font-medium truncate">
+                      {selectedGame?.title || searchQuery.trim()}
+                    </p>
+                  </div>
                   <button
                     onClick={() => {
                       setSelectedCover(null);
                       setSelectedGame(null);
                     }}
-                    className="absolute top-1 right-1 w-5 h-5 rounded-full flex items-center justify-center"
-                    style={{ background: 'rgba(255, 100, 100, 0.8)' }}
+                    className="absolute top-2 right-2 w-6 h-6 rounded-full flex items-center justify-center"
+                    style={{ background: 'rgba(255, 100, 100, 0.9)' }}
                   >
                     <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

@@ -178,6 +178,7 @@ export const RAWG_API = {
   IMAGE_BASE: 'https://media.rawg.io/media',
   SEARCH_ENDPOINT: '/games',
   PAGE_SIZE: 8,
+  API_KEY: 'c2e155559f234b119fb81f8315bf8e89',
 };
 
 /**

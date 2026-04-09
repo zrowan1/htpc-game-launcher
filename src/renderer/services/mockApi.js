@@ -7,6 +7,13 @@
  * @module services/mockApi
  */
 
+// RAWG API configuration
+const RAWG_API = {
+  BASE_URL: 'https://api.rawg.io/api',
+  PAGE_SIZE: 8,
+  API_KEY: 'c2e155559f234b119fb81f8315bf8e89',
+};
+
 // Mock games database (in memory)
 const mockGames = {
   games: [
@@ -68,8 +75,9 @@ export const mockElectronAPI = {
   async addGame(game) {
     console.log('[MockAPI] Adding game:', game.title);
     const games = await this.loadGames();
+    const { coverUrl, ...rest } = game;
     const newGame = {
-      ...game,
+      ...rest,
       id: `mock-${Date.now()}`,
       addedAt: Date.now()
     };
@@ -92,66 +100,67 @@ export const mockElectronAPI = {
    * Update a game (mock)
    */
   async updateGame(gameId, updates) {
-    console.log('[MockAPI] Updating game:', gameId, updates);
+    console.log('[MockAPI] Updating game:', gameId, JSON.stringify(updates));
     const games = await this.loadGames();
     const index = games.games.findIndex(g => g.id === gameId);
     if (index !== -1) {
       games.games[index] = { ...games.games[index], ...updates };
       await this.saveGames(games);
+      console.log('[MockAPI] Game updated, artwork:', games.games[index].artwork);
       return games.games[index];
     }
     return null;
   },
 
   /**
-   * Search games (mock - returns sample data)
+   * Search games via RAWG API
    */
   async searchGames(query) {
-    console.log('[MockAPI] Searching games:', query);
-    return [
-      {
-        id: 'rawg-1',
-        title: `${query} Game 1`,
-        released: '2023-01-15',
-        background_image: 'https://via.placeholder.com/300x200/3b82f6/ffffff?text=Game+1',
-        rating: 4.5,
-        metacritic: 85,
-      },
-      {
-        id: 'rawg-2',
-        title: `${query} Game 2`,
-        released: '2022-06-20',
-        background_image: 'https://via.placeholder.com/300x200/10b981/ffffff?text=Game+2',
-        rating: 4.2,
-        metacritic: 78,
-      },
-      {
-        id: 'rawg-3',
-        title: `${query} Adventures`,
-        released: '2021-11-10',
-        background_image: 'https://via.placeholder.com/300x200/f59e0b/ffffff?text=Game+3',
-        rating: 4.8,
-        metacritic: 92,
-      },
-      {
-        id: 'rawg-4',
-        title: `${query} Chronicles`,
-        released: '2020-03-25',
-        background_image: 'https://via.placeholder.com/300x200/8b5cf6/ffffff?text=Game+4',
-        rating: 4.0,
-        metacritic: 72,
-      },
-    ];
+    if (!query || query.trim().length < 2) {
+      return [];
+    }
+
+    console.log('[MockAPI] Searching RAWG:', query);
+
+    try {
+      const params = new URLSearchParams({
+        key: RAWG_API.API_KEY,
+        search: query.trim(),
+        page_size: RAWG_API.PAGE_SIZE.toString(),
+      });
+
+      const response = await fetch(`${RAWG_API.BASE_URL}/games?${params.toString()}`);
+      
+      if (!response.ok) {
+        throw new Error(`RAWG API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      return (data.results || []).map(game => ({
+        id: game.id?.toString() || '',
+        title: game.name || 'Unknown',
+        released: game.released || null,
+        background_image: game.background_image || null,
+        rating: game.rating || 0,
+        metacritic: game.metacritic || null,
+      }));
+    } catch (error) {
+      console.error('[MockAPI] RAWG search failed:', error.message);
+      return [];
+    }
   },
 
   /**
-   * Download cover (mock - returns fake path)
+   * Download cover (mock - returns RAWG URL as CDN)
    */
   async downloadCover(gameId, imageUrl) {
     console.log('[MockAPI] Downloading cover for:', gameId);
+    if (!imageUrl) return null;
+    
     return {
-      source: 'local',
-      path: `/mock/covers/${gameId}.jpg`,
+      source: 'cdn',
+      cdnUrl: imageUrl,
       originalUrl: imageUrl,
     };
   },

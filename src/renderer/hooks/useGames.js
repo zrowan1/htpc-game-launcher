@@ -100,19 +100,18 @@ export function useGames() {
         try {
           const coverResult = await downloadCover(saved.id, game.coverUrl);
           if (coverResult) {
-            const updated = await apiUpdateGame(saved.id, {
-              artwork: {
-                source: 'local',
-                path: coverResult.path,
-              },
-            });
+            const artwork = coverResult.source === 'cdn'
+              ? { source: 'cdn', cdnUrl: coverResult.cdnUrl }
+              : { source: 'local', path: coverResult.path };
+            
+            const updated = await apiUpdateGame(saved.id, { artwork });
             if (updated) {
               setGames((prev) => prev.map((g) => (g.id === saved.id ? updated : g)));
               return updated;
             }
           }
         } catch (coverErr) {
-          console.warn('[useGames] Cover download failed, using original URL:', coverErr.message);
+          console.warn('[useGames] Cover download failed:', coverErr.message);
         }
       }
       

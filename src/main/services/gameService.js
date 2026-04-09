@@ -188,6 +188,7 @@ async function searchGamesRAWG(query) {
   }
 
   const params = new URLSearchParams({
+    key: RAWG_API.API_KEY,
     search: query.trim(),
     page_size: RAWG_API.PAGE_SIZE.toString(),
   });
