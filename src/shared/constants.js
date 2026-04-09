@@ -46,11 +46,16 @@ export const IPC_CHANNELS = {
   SAVE_GAMES: 'save-games',
   ADD_GAME: 'add-game',
   REMOVE_GAME: 'remove-game',
+  UPDATE_GAME: 'update-game',
   LAUNCH_GAME: 'launch-game',
   
   // Steam integration
   GET_STEAM_GAMES: 'get-steam-games',
   REFRESH_STEAM: 'refresh-steam',
+  
+  // Game search & artwork
+  SEARCH_GAMES: 'search-games',
+  DOWNLOAD_COVER: 'download-cover',
   
   // App lifecycle
   QUIT_APP: 'quit-app',
@@ -162,4 +167,27 @@ export const ARTWORK_SOURCE = {
   LOCAL: 'local',        // Local Steam grid folder
   CDN: 'cdn',             // Steam CDN
   PLACEHOLDER: 'placeholder',
+};
+
+/**
+ * RAWG API configuration for game cover fetching
+ * @readonly
+ */
+export const RAWG_API = {
+  BASE_URL: 'https://api.rawg.io/api',
+  IMAGE_BASE: 'https://media.rawg.io/media',
+  SEARCH_ENDPOINT: '/games',
+  PAGE_SIZE: 8,
+};
+
+/**
+ * Virtual keyboard layout
+ * @readonly
+ */
+export const KEYBOARD_LAYOUT = {
+  ROW1: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '='],
+  ROW2: ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '[', ']'],
+  ROW3: ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', ';', "'"],
+  ROW4: ['Z', 'X', 'C', 'V', 'B', 'N', 'M', ',', '.', '/'],
+  SPECIAL: ['⌫', 'Space', 'Enter'],
 };

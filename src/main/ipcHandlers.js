@@ -59,6 +59,19 @@ function registerIpcHandlers(mainWindow) {
     }
   });
 
+  ipcMain.handle(IPC_CHANNELS.UPDATE_GAME, async (_event, { gameId, updates }) => {
+    try {
+      const updated = gameService.updateGame(gameId, updates);
+      if (!updated) {
+        throw new Error(`Game not found: ${gameId}`);
+      }
+      return updated;
+    } catch (error) {
+      console.error('[IPC] update-game error:', error);
+      throw error;
+    }
+  });
+
   ipcMain.handle(IPC_CHANNELS.LAUNCH_GAME, async (_event, game) => {
     try {
       gameService.launchGame(game, () => {
@@ -95,6 +108,27 @@ function registerIpcHandlers(mainWindow) {
       return { success: true, count: enhancedGames.length };
     } catch (error) {
       console.error('[IPC] refresh-steam error:', error);
+      throw error;
+    }
+  });
+
+  // Game search & cover download handlers
+  ipcMain.handle(IPC_CHANNELS.SEARCH_GAMES, async (_event, query) => {
+    try {
+      const results = await gameService.searchGamesRAWG(query);
+      return results;
+    } catch (error) {
+      console.error('[IPC] search-games error:', error);
+      return [];
+    }
+  });
+
+  ipcMain.handle(IPC_CHANNELS.DOWNLOAD_COVER, async (_event, { gameId, imageUrl }) => {
+    try {
+      const result = await gameService.downloadCover(gameId, imageUrl);
+      return result;
+    } catch (error) {
+      console.error('[IPC] download-cover error:', error);
       throw error;
     }
   });

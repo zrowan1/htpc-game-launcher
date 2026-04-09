@@ -8,7 +8,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { loadGames, addGame as apiAddGame, removeGame as apiRemoveGame } from '../services/gameApi';
+import { loadGames, addGame as apiAddGame, removeGame as apiRemoveGame, downloadCover, updateGame as apiUpdateGame } from '../services/gameApi';
 import { getSteamGames } from '../services/steamApi';
 import { LAUNCHER_TYPES } from '../../shared/constants';
 
@@ -95,6 +95,27 @@ export function useGames() {
   const addGame = useCallback(async (game) => {
     try {
       const saved = await apiAddGame(game);
+      
+      if (game.coverUrl && saved.id) {
+        try {
+          const coverResult = await downloadCover(saved.id, game.coverUrl);
+          if (coverResult) {
+            const updated = await apiUpdateGame(saved.id, {
+              artwork: {
+                source: 'local',
+                path: coverResult.path,
+              },
+            });
+            if (updated) {
+              setGames((prev) => prev.map((g) => (g.id === saved.id ? updated : g)));
+              return updated;
+            }
+          }
+        } catch (coverErr) {
+          console.warn('[useGames] Cover download failed, using original URL:', coverErr.message);
+        }
+      }
+      
       setGames((prev) => [...prev, saved]);
       return saved;
     } catch (err) {

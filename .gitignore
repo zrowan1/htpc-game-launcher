@@ -163,6 +163,7 @@ src/data/games.json
 src/data/games.json.bak
 .env.local
 
-# Logs
-*.log
-npm-debug.log*
+# SSL certificates (generated for local development)
+certs/
+*.pem
+*.key

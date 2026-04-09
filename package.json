@@ -9,7 +9,11 @@
   "scripts": {
     "start": "electron .",
     "dev": "electron . --dev",
-    "dev:web": "vite",
+    "dev:web": "VITE_MOCK_MODE=true vite",
+    "dev:web:https": "npm run certs && VITE_MOCK_MODE=true vite",
+    "dev:tunnel": "./start-tunnel.sh",
+    "dev:tunnel:win": "start-tunnel.bat",
+    "certs": "bash scripts/generate-ssl.sh",
     "build": "electron-builder",
     "reset-games": "rm -f src/data/games.json && echo 'games.json removed'",
     "refresh-steam": "node scripts/refresh-steam.js"
@@ -17,11 +21,12 @@
   "devDependencies": {
     "@vitejs/plugin-react": "^4.0.0",
     "autoprefixer": "^10.0.0",
-    "electron": "^29.0.0",
-    "electron-builder": "^24.0.0",
-    "vite": "^5.0.0"
+    "electron": "^41.2.0",
+    "electron-builder": "^26.8.1",
+    "vite": "^6.0.0"
   },
   "dependencies": {
+    "auto-launch": "^5.0.6",
     "electron-is-dev": "^3.0.1",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",

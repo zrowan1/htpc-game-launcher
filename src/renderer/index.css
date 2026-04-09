@@ -68,6 +68,11 @@ body {
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
+
+  .ring-accent-primary {
+    --tw-ring-color: rgba(120, 180, 255, 0.6);
+    box-shadow: 0 0 0 2px rgba(120, 180, 255, 0.4), 0 0 20px rgba(120, 180, 255, 0.3);
+  }
 }
 
 /* Custom scrollbar */

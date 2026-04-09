@@ -66,6 +66,21 @@ export async function removeGame(gameId) {
 }
 
 /**
+ * Update a game
+ * @param {string} gameId - Game ID to update
+ * @param {Object} updates - Fields to update
+ * @returns {Promise<Object>} Updated game
+ */
+export async function updateGame(gameId, updates) {
+  const api = getApi();
+  if (!api) {
+    console.warn('[GameApi] Cannot update game: Not in Electron');
+    return null;
+  }
+  return api.updateGame(gameId, updates);
+}
+
+/**
  * Launch a game
  * @param {Object} game - Game to launch
  * @returns {Promise<void>}
@@ -91,4 +106,33 @@ export async function saveGames(data) {
     return;
   }
   return api.saveGames(data);
+}
+
+/**
+ * Search games via RAWG API
+ * @param {string} query - Search query
+ * @returns {Promise<Array>} Array of matching games
+ */
+export async function searchGames(query) {
+  const api = getApi();
+  if (!api) {
+    console.warn('[GameApi] Cannot search games: Not in Electron');
+    return [];
+  }
+  return api.searchGames(query);
+}
+
+/**
+ * Download and save a cover image
+ * @param {string} gameId - Game ID for filename
+ * @param {string} imageUrl - URL to the image
+ * @returns {Promise<Object>} Object with local path and original URL
+ */
+export async function downloadCover(gameId, imageUrl) {
+  const api = getApi();
+  if (!api) {
+    console.warn('[GameApi] Cannot download cover: Not in Electron');
+    return null;
+  }
+  return api.downloadCover(gameId, imageUrl);
 }

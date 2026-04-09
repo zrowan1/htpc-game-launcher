@@ -31,8 +31,11 @@ const VALID_CHANNELS = [
   IPC_CHANNELS.SAVE_GAMES,
   IPC_CHANNELS.ADD_GAME,
   IPC_CHANNELS.REMOVE_GAME,
+  IPC_CHANNELS.UPDATE_GAME,
   IPC_CHANNELS.LAUNCH_GAME,
   IPC_CHANNELS.REFRESH_STEAM,
+  IPC_CHANNELS.SEARCH_GAMES,
+  IPC_CHANNELS.DOWNLOAD_COVER,
   IPC_CHANNELS.QUIT_APP,
   IPC_CHANNELS.GET_AUTOSTART_STATUS,
   IPC_CHANNELS.TOGGLE_AUTOSTART,
@@ -79,6 +82,14 @@ const electronAPI = {
   removeGame: (gameId) => ipcRenderer.invoke(IPC_CHANNELS.REMOVE_GAME, gameId),
 
   /**
+   * Update a game
+   * @param {string} gameId - ID of game to update
+   * @param {Object} updates - Fields to update
+   * @returns {Promise<Object>} Updated game
+   */
+  updateGame: (gameId, updates) => ipcRenderer.invoke(IPC_CHANNELS.UPDATE_GAME, { gameId, updates }),
+
+  /**
    * Launch a game
    * @param {Object} game - Game to launch
    * @returns {Promise<{success: boolean}>}
@@ -120,6 +131,21 @@ const electronAPI = {
    * @returns {Promise<{enabled: boolean, success: boolean}>}
    */
   disableAutoStart: () => ipcRenderer.invoke(IPC_CHANNELS.DISABLE_AUTOSTART),
+
+  /**
+   * Search games via RAWG API
+   * @param {string} query - Search query
+   * @returns {Promise<Array>} Array of matching games
+   */
+  searchGames: (query) => ipcRenderer.invoke(IPC_CHANNELS.SEARCH_GAMES, query),
+
+  /**
+   * Download and save a cover image
+   * @param {string} gameId - Game ID for filename
+   * @param {string} imageUrl - URL to the image
+   * @returns {Promise<Object>} Object with local path and original URL
+   */
+  downloadCover: (gameId, imageUrl) => ipcRenderer.invoke(IPC_CHANNELS.DOWNLOAD_COVER, { gameId, imageUrl }),
 
   /**
    * Listen for game exited events

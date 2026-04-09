@@ -12,7 +12,7 @@ const path = require('path');
 const { shell } = require('electron');
 const { exec } = require('child_process');
 const { v4: uuidv4 } = require('uuid');
-const { DEFAULT_GAMES_DATA, FILE_NAMES, LAUNCHER_TYPES, LAUNCH_DELAYS } = require('../../shared/constants');
+const { DEFAULT_GAMES_DATA, FILE_NAMES, LAUNCHER_TYPES, LAUNCH_DELAYS, RAWG_API, STEAM_ARTWORK } = require('../../shared/constants');
 
 // Lazy-init so app.getPath() is safe to call after app.ready
 let gamesFilePath = null;
@@ -153,10 +153,140 @@ function launchGame(game, onExit) {
   }
 }
 
+/**
+ * Get the covers cache directory path
+ * @returns {string} Full path to covers directory
+ */
+function getCoversDir() {
+  const { app } = require('electron');
+  const coversDir = path.join(app.getPath('userData'), STEAM_ARTWORK.CACHE_FOLDER, 'covers');
+  
+  if (!fs.existsSync(coversDir)) {
+    fs.mkdirSync(coversDir, { recursive: true });
+  }
+  
+  return coversDir;
+}
+
+/**
+ * Get the path for a specific game's cover
+ * @param {string} gameId - Game ID
+ * @returns {string} Full path to cover image
+ */
+function getCoverPath(gameId) {
+  return path.join(getCoversDir(), `${gameId}.jpg`);
+}
+
+/**
+ * Search games via RAWG API
+ * @param {string} query - Search query
+ * @returns {Promise<Array>} Array of matching games with cover URLs
+ */
+async function searchGamesRAWG(query) {
+  if (!query || query.trim().length < 2) {
+    return [];
+  }
+
+  const params = new URLSearchParams({
+    search: query.trim(),
+    page_size: RAWG_API.PAGE_SIZE.toString(),
+  });
+
+  const url = `${RAWG_API.BASE_URL}${RAWG_API.SEARCH_ENDPOINT}?${params.toString()}`;
+  console.log(`[GameService] Searching RAWG: ${query}`);
+
+  try {
+    const response = await fetch(url);
+    
+    if (!response.ok) {
+      throw new Error(`RAWG API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    
+    return (data.results || []).map(game => ({
+      id: game.id?.toString() || '',
+      title: game.name || 'Unknown',
+      released: game.released || null,
+      background_image: game.background_image || null,
+      rating: game.rating || 0,
+      metacritic: game.metacritic || null,
+    }));
+  } catch (error) {
+    console.error('[GameService] RAWG search failed:', error.message);
+    return [];
+  }
+}
+
+/**
+ * Download and save a cover image
+ * @param {string} gameId - Game ID for filename
+ * @param {string} imageUrl - Full URL to the image
+ * @returns {Promise<Object>} Object with local path and original URL
+ */
+async function downloadCover(gameId, imageUrl) {
+  if (!imageUrl || !gameId) {
+    throw new Error('Missing imageUrl or gameId');
+  }
+
+  const coverPath = getCoverPath(gameId);
+  console.log(`[GameService] Downloading cover for game ${gameId}`);
+
+  try {
+    const response = await fetch(imageUrl);
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch image: ${response.status}`);
+    }
+
+    const arrayBuffer = await response.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    
+    fs.writeFileSync(coverPath, buffer);
+    console.log(`[GameService] Cover saved to: ${coverPath}`);
+
+    return {
+      source: 'local',
+      path: coverPath,
+      originalUrl: imageUrl,
+    };
+  } catch (error) {
+    console.error('[GameService] Cover download failed:', error.message);
+    throw error;
+  }
+}
+
+/**
+ * Update a game with new data
+ * @param {string} gameId - ID of game to update
+ * @param {Object} updates - Fields to update
+ * @returns {Object|null} Updated game or null if not found
+ */
+function updateGame(gameId, updates) {
+  const data = loadGames();
+  const index = data.games.findIndex((g) => g.id === gameId);
+  
+  if (index === -1) {
+    return null;
+  }
+  
+  data.games[index] = {
+    ...data.games[index],
+    ...updates,
+  };
+  
+  writeGamesFile(data);
+  return data.games[index];
+}
+
 module.exports = {
   loadGames,
   saveGames,
   addGame,
   removeGame,
+  updateGame,
   launchGame,
+  searchGamesRAWG,
+  downloadCover,
+  getCoverPath,
 };

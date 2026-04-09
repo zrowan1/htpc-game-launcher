@@ -7,6 +7,7 @@ import { useGamepad } from './hooks/useGamepad';
 import { useKeyboard } from './hooks/useKeyboard';
 import { useGames } from './hooks/useGames';
 import { onGameExited } from './services/appApi';
+import { downloadCover, updateGame } from './services/gameApi';
 import { TOAST_DURATION } from '../shared/constants';
 
 /**
@@ -76,7 +77,21 @@ function AppContent() {
   }, []);
 
   const handleAddGame = async (gameData) => {
-    await addGame(gameData);
+    const { coverUrl, ...gameWithoutCover } = gameData;
+    
+    const savedGame = await addGame(gameWithoutCover);
+    
+    if (coverUrl && savedGame.id) {
+      try {
+        const artwork = await downloadCover(savedGame.id, coverUrl);
+        if (artwork) {
+          await updateGame(savedGame.id, { artwork });
+        }
+      } catch (error) {
+        console.warn('[App] Failed to download cover:', error);
+      }
+    }
+    
     setShowAddGame(false);
   };
 
