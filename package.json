@@ -7,23 +7,26 @@
   "author": "Rowan",
   "license": "MIT",
   "scripts": {
-    "start": "electron .",
-    "dev": "electron . --dev",
+    "start": "concurrently \"vite\" \"wait-on http://localhost:5173 && electron .\"",
+    "dev": "concurrently \"vite\" \"wait-on http://localhost:5173 && electron .\"",
     "dev:web": "VITE_MOCK_MODE=true vite",
     "dev:web:https": "npm run certs && VITE_MOCK_MODE=true vite",
     "dev:tunnel": "./start-tunnel.sh",
     "dev:tunnel:win": "start-tunnel.bat",
     "certs": "bash scripts/generate-ssl.sh",
-    "build": "electron-builder",
+    "build": "vite build && electron-builder",
+    "build:win": "setx ELECTRON_BUILDER_ALLOW_UNRESOLVED true && electron-builder --win",
     "reset-games": "rm -f src/data/games.json && echo 'games.json removed'",
     "refresh-steam": "node scripts/refresh-steam.js"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.0.0",
     "autoprefixer": "^10.0.0",
+    "concurrently": "^8.2.2",
     "electron": "^41.2.0",
     "electron-builder": "^26.8.1",
-    "vite": "^6.0.0"
+    "vite": "^6.0.0",
+    "wait-on": "^7.2.0"
   },
   "dependencies": {
     "auto-launch": "^5.0.6",
@@ -40,13 +43,22 @@
     "files": [
       "src/**/*",
       "public/**/*",
-      "node_modules/**/*"
+      "node_modules/**/*",
+      "dist/**/*"
     ],
+    "directories": {
+      "output": "release"
+    },
     "win": {
       "target": [
-        "portable",
-        "nsis"
-      ]
-    }
+        "portable"
+      ],
+      "sign": false
+    },
+    "portable": {
+      "useZip": true
+    },
+    "asar": true,
+    "asarUnpack": "**/*.{node,dll}"
   }
 }

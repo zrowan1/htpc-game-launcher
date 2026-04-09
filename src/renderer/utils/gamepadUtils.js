@@ -9,6 +9,8 @@
 
 import { BUTTON_MAP, AXIS_INDICES } from '../../shared/constants';
 
+const DEADZONE = 0.5; // Minimum waarde voor analog stick input
+
 /**
  * Check if a button is pressed
  * @param {Object} buttonsPressed - Current button state
@@ -42,22 +44,37 @@ export function wasButtonJustReleased(prevState, currentState, buttonName) {
 }
 
 /**
- * Get D-pad direction from axes
+ * Get direction from analog stick or D-pad
+ * Checkt zowel left analog stick als D-pad axes
  * @param {number[]} axes - Gamepad axes array
  * @returns {{x: number, y: number}} Direction (-1, 0, 1)
  */
 export function getDpadDirection(axes) {
-  const x = axes[AXIS_INDICES.DPAD_X] || 0;
-  const y = axes[AXIS_INDICES.DPAD_Y] || 0;
+  // Eerst check D-pad axes (indien aanwezig)
+  const dpadX = axes[AXIS_INDICES.DPAD_X] || 0;
+  const dpadY = axes[AXIS_INDICES.DPAD_Y] || 0;
   
+  // Als D-pad wordt gebruikt (waarde is niet 0), gebruik die
+  if (Math.abs(dpadX) > 0.1 || Math.abs(dpadY) > 0.1) {
+    return {
+      x: Math.round(dpadX),
+      y: Math.round(dpadY),
+    };
+  }
+  
+  // Anders gebruik left analog stick
+  const leftStickX = axes[AXIS_INDICES.LEFT_STICK_X] || 0;
+  const leftStickY = axes[AXIS_INDICES.LEFT_STICK_Y] || 0;
+  
+  // Apply deadzone en converteer naar -1, 0, of 1
   return {
-    x: Math.round(x),
-    y: Math.round(y),
+    x: Math.abs(leftStickX) > DEADZONE ? Math.sign(leftStickX) : 0,
+    y: Math.abs(leftStickY) > DEADZONE ? Math.sign(leftStickY) : 0,
   };
 }
 
 /**
- * Detect D-pad movement
+ * Detect D-pad or analog stick movement
  * @param {number[]} prevAxes - Previous axes state
  * @param {number[]} currentAxes - Current axes state
  * @returns {{direction: string, moved: boolean}} Direction name and movement state
@@ -66,11 +83,18 @@ export function detectDpadMovement(prevAxes, currentAxes) {
   const prev = getDpadDirection(prevAxes);
   const current = getDpadDirection(currentAxes);
   
+  // Alles terug naar 0 (neutral) telt niet als "movement"
+  if (current.x === 0 && current.y === 0) {
+    return { direction: null, moved: false };
+  }
+  
+  // Check of er een state change is
   if (prev.x === current.x && prev.y === current.y) {
     return { direction: null, moved: false };
   }
   
   let direction = null;
+  // Prioriteit: horizontaal, dan verticaal
   if (current.x === 1) direction = 'right';
   else if (current.x === -1) direction = 'left';
   else if (current.y === 1) direction = 'down';
@@ -99,4 +123,20 @@ export function createDefaultGamepadState() {
     buttonsPressed: {},
     axes: [0, 0, 0, 0, 0, 0, 0, 0],
   };
+}
+
+/**
+ * Debug functie om gamepad state te loggen
+ * @param {Object} gamepadState - Current gamepad state
+ */
+export function debugGamepadState(gamepadState) {
+  const pressed = Object.entries(gamepadState.buttonsPressed)
+    .filter(([_, v]) => v)
+    .map(([k]) => k);
+  
+  const axes = gamepadState.axes
+    .map((v, i) => Math.abs(v) > 0.1 ? `[${i}:${v.toFixed(2)}]` : '')
+    .filter(Boolean);
+  
+  console.log('[Gamepad Debug] Buttons:', pressed.join(', ') || 'none', '| Axes:', axes.join(' ') || 'none');
 }

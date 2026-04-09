@@ -20,6 +20,8 @@ const DEFAULT_STATE = {
   timestamp: 0,
 };
 
+let debugInterval = null;
+
 /**
  * Hook for gamepad input
  * @returns {Object} Gamepad state
@@ -48,6 +50,22 @@ export function useGamepad() {
     if (!isConnected) {
       setIsConnected(true);
       console.log('[useGamepad] Connected:', gp.id);
+      console.log('[useGamepad] Buttons:', gp.buttons.length, 'Axes:', gp.axes.length);
+      
+      // Start debug logging na 2 seconden
+      if (debugInterval) clearInterval(debugInterval);
+      debugInterval = setInterval(() => {
+        const gamepads = navigator.getGamepads();
+        const gp = gamepads[0];
+        if (gp) {
+          const activeAxes = gp.axes
+            .map((v, i) => ({ i, v: Math.abs(v) > 0.1 ? v.toFixed(2) : 0 }))
+            .filter(a => a.v !== 0);
+          if (activeAxes.length > 0) {
+            console.log('[useGamepad] Active axes:', activeAxes.map(a => `[${a.i}]=${a.v}`).join(' '));
+          }
+        }
+      }, 1000);
     }
 
     // Skip if state hasn't changed (optimization)
@@ -94,6 +112,10 @@ export function useGamepad() {
       if (rafRef.current) {
         cancelAnimationFrame(rafRef.current);
       }
+      if (debugInterval) {
+        clearInterval(debugInterval);
+        debugInterval = null;
+      }
     };
   }, [gameLoop]);
 
@@ -108,6 +130,10 @@ export function useGamepad() {
       console.log('[useGamepad] Gamepad disconnected:', e.gamepad.id);
       setIsConnected(false);
       setGamepadState(DEFAULT_STATE);
+      if (debugInterval) {
+        clearInterval(debugInterval);
+        debugInterval = null;
+      }
     };
 
     window.addEventListener('gamepadconnected', handleConnect);

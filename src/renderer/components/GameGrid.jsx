@@ -57,17 +57,19 @@ export default function GameGrid({ games, gamepadState, keyboardState, onAddGame
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []); // empty, uses refs
 
-  // --- Gamepad D-pad: edge detection via axes ---
-  const prevAxesRef = useRef(gamepadState.axes);
+  // --- Gamepad D-pad & Analog Stick: edge detection via axes ---
+  const prevAxesRef = useRef([0, 0, 0, 0, 0, 0, 0, 0]);
+  
   useEffect(() => {
-    const axes = gamepadState.axes;
+    const axes = gamepadState?.axes || [0, 0, 0, 0, 0, 0, 0, 0];
     const prev = prevAxesRef.current;
     const total = gamesRef.current.length;
 
-    if (total > 0) {
+    if (total > 0 && gamepadState?.connected) {
       const { direction, moved } = detectDpadMovement(prev, axes);
       
       if (moved) {
+        console.log('[GameGrid] Navigation:', direction, 'Axes:', axes.slice(0, 4).map(v => v.toFixed(2)));
         switch (direction) {
           case 'right':
             setSelectedIndex((i) => (i + 1) % total);
@@ -86,12 +88,12 @@ export default function GameGrid({ games, gamepadState, keyboardState, onAddGame
     }
 
     prevAxesRef.current = axes;
-  }, [gamepadState.axes]);
+  }, [gamepadState?.axes, gamepadState?.connected]);
 
   // --- Gamepad A button: launch selected game ---
-  const prevButtonsRef = useRef(gamepadState.buttonsPressed);
+  const prevButtonsRef = useRef({});
   useEffect(() => {
-    const pressed = gamepadState.buttonsPressed;
+    const pressed = gamepadState?.buttonsPressed || {};
     const prev = prevButtonsRef.current;
 
     if (wasButtonJustPressed(prev, pressed, 'A')) {
@@ -100,7 +102,7 @@ export default function GameGrid({ games, gamepadState, keyboardState, onAddGame
     }
 
     prevButtonsRef.current = pressed;
-  }, [gamepadState.buttonsPressed]);
+  }, [gamepadState?.buttonsPressed]);
 
   return (
     <div className="p-8 w-full h-full">

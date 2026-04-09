@@ -7,14 +7,42 @@
  * Security:
  * - contextIsolation is enabled (renderer cannot access Node.js directly)
  * - Only whitelisted IPC channels are exposed
- * - No direct access to fs, path, or other Node.js modules
+ * - No direct access to fs path, or other Node.js modules
  * 
  * @module preload
  */
 
 const { contextBridge, ipcRenderer } = require('electron');
-const path = require('path');
-const { IPC_CHANNELS } = require('../shared/constants');
+
+// IPC Channel names - defined inline avoid module resolution issues
+// in the sandboxed preload context
+const IPC_CHANNELS = {
+  // Game management
+  LOAD_GAMES: 'load-games',
+ SAVE_GAMES: 'save-games',
+  ADD_GAME: 'add-game',
+  REMOVE_GAME: 'remove-game',
+  UPDATE_GAME: 'update-game',
+  LAUNCH_GAME: 'launch-game',
+  
+  // Steam integration
+  GET_STEAM_GAMES: 'get-steam-games',
+  REFRESH_STEAM: 'refresh-steam',
+  
+  // Game search & artwork
+  SEARCH_GAMES: 'search-games',
+  DOWNLOAD_COVER: 'download-cover',
+  
+  // App lifecycle
+  QUIT_APP: 'quit-app',
+ GAME_EXITED: 'game-exited',
+  
+  // Auto start
+  GET_AUTOSTART_STATUS: 'get-autostart-status',
+  TOGGLE_AUTOSTART: 'toggle-autostart',
+  ENABLE_AUTOSTART: 'enable-autostart',
+  DISABLE_AUTOSTART: 'disable-autostart',
+};
 
 function localPathToFileUrl(filePath) {
   if (!filePath) return null;
@@ -26,13 +54,13 @@ function localPathToFileUrl(filePath) {
  * This whitelist ensures only intended operations are possible
  */
 const VALID_CHANNELS = [
-  IPC_CHANNELS.GET_STEAM_GAMES,
   IPC_CHANNELS.LOAD_GAMES,
   IPC_CHANNELS.SAVE_GAMES,
   IPC_CHANNELS.ADD_GAME,
   IPC_CHANNELS.REMOVE_GAME,
   IPC_CHANNELS.UPDATE_GAME,
   IPC_CHANNELS.LAUNCH_GAME,
+  IPC_CHANNELS.GET_STEAM_GAMES,
   IPC_CHANNELS.REFRESH_STEAM,
   IPC_CHANNELS.SEARCH_GAMES,
   IPC_CHANNELS.DOWNLOAD_COVER,

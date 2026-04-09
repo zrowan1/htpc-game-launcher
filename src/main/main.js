@@ -36,9 +36,9 @@ function createWindow() {
   });
 
   // Determine start URL based on environment
-  // Gebruik 0.0.0.0 voor netwerktoegang vanaf andere apparaten
+  // Gebruik localhost voor betere compatibiliteit
   const startUrl = isDev
-    ? 'http://0.0.0.0:5173'
+    ? 'http://localhost:5173'
     : `file://${path.join(__dirname, '../renderer/index.html')}`;
 
   mainWindow.loadURL(startUrl);
