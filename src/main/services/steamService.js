@@ -11,7 +11,9 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const vdf = require('vdf-parser');
-const { FILE_NAMES, STEAM_PATH_CANDIDATES, STEAM_PATH_LINUX, LAUNCHER_TYPES } = require('../../shared/constants');
+const { FILE_NAMES, STEAM_PATH_CANDIDATES, STEAM_PATH_LINUX, LAUNCHER_TYPES, STEAM_ARTWORK, ARTWORK_SOURCE } = require('../../shared/constants');
+
+let cachedSteamId = null;
 
 /**
  * Get the Steam installation path
@@ -160,8 +162,110 @@ function getSteamGames() {
   return allGames;
 }
 
+/**
+ * Get the user's SteamID from localconfig.vdf
+ * @param {string} steamPath - Path to Steam installation
+ * @returns {string|null} SteamID64 or null if not found
+ */
+function getSteamUserId(steamPath) {
+  if (cachedSteamId) {
+    return cachedSteamId;
+  }
+
+  const localConfigPath = path.join(steamPath, 'userdata', 'localconfig.vdf');
+  
+  if (!fs.existsSync(localConfigPath)) {
+    console.warn('[SteamService] localconfig.vdf not found');
+    return null;
+  }
+
+  try {
+    const content = fs.readFileSync(localConfigPath, 'utf-8');
+    const parsed = vdf.parse(content);
+    
+    // Navigate: Valve > SteamUsers > <some number> > SteamID
+    const users = parsed?.Valve?.SteamUsers || parsed?.users || {};
+    const userIds = Object.keys(users);
+    
+    if (userIds.length > 0) {
+      const firstUserId = userIds[0];
+      cachedSteamId = firstUserId;
+      console.log(`[SteamService] Found SteamID: ${cachedSteamId}`);
+      return cachedSteamId;
+    }
+  } catch (error) {
+    console.error('[SteamService] Error parsing localconfig.vdf:', error.message);
+  }
+
+  return null;
+}
+
+/**
+ * Get artwork path for a Steam game
+ * First checks local grid folder, falls back to CDN
+ * @param {string} steamPath - Path to Steam installation
+ * @param {string} appId - Steam app ID
+ * @returns {Object} Artwork info with source and path
+ */
+function getGameArtwork(steamPath, appId) {
+  // Try local grid first
+  const steamId = getSteamUserId(steamPath);
+  
+  if (steamId) {
+    const localGridPath = path.join(
+      steamPath, 
+      'userdata', 
+      steamId, 
+      STEAM_ARTWORK.GRID_FOLDER,
+      `${appId}${STEAM_ARTWORK.GRID_EXTENSION}`
+    );
+    
+    if (fs.existsSync(localGridPath)) {
+      return {
+        source: ARTWORK_SOURCE.LOCAL,
+        path: localGridPath,
+        cdnUrl: `${STEAM_ARTWORK.CDN_HEADER_BASE}/${appId}${STEAM_ARTWORK.HEADER_EXTENSION}`,
+      };
+    }
+  }
+
+  // Fallback to Steam CDN header image
+  return {
+    source: ARTWORK_SOURCE.CDN,
+    path: null,
+    cdnUrl: `${STEAM_ARTWORK.CDN_HEADER_BASE}/${appId}${STEAM_ARTWORK.HEADER_EXTENSION}`,
+  };
+}
+
+/**
+ * Enhance Steam games with artwork information
+ * @param {Object[]} games - Array of Steam games
+ * @returns {Object[]} Games with artwork added
+ */
+function enhanceGamesWithArtwork(games) {
+  const steamPath = getSteamInstallPath();
+  
+  if (!steamPath) {
+    return games.map(game => ({
+      ...game,
+      artwork: {
+        source: ARTWORK_SOURCE.PLACEHOLDER,
+        path: null,
+        cdnUrl: null,
+      }
+    }));
+  }
+
+  return games.map(game => ({
+    ...game,
+    artwork: getGameArtwork(steamPath, game.steamAppId),
+  }));
+}
+
 module.exports = {
   getSteamGames,
   getSteamInstallPath,
   getLibraryFolders,
+  getGameArtwork,
+  enhanceGamesWithArtwork,
 };

@@ -10,6 +10,7 @@
 const { ipcMain } = require('electron');
 const gameService = require('./services/gameService');
 const steamService = require('./services/steamService');
+const autoStartService = require('./services/autoStartService');
 const { IPC_CHANNELS } = require('../shared/constants');
 
 /**
@@ -79,7 +80,8 @@ function registerIpcHandlers(mainWindow) {
   // Steam handlers
   ipcMain.handle(IPC_CHANNELS.GET_STEAM_GAMES, async () => {
     try {
-      return steamService.getSteamGames();
+      const games = steamService.getSteamGames();
+      return steamService.enhanceGamesWithArtwork(games);
     } catch (error) {
       console.error('[IPC] get-steam-games error:', error);
       return []; // Return empty array on error rather than crash
@@ -89,7 +91,8 @@ function registerIpcHandlers(mainWindow) {
   ipcMain.handle(IPC_CHANNELS.REFRESH_STEAM, async () => {
     try {
       const games = steamService.getSteamGames();
-      return { success: true, count: games.length };
+      const enhancedGames = steamService.enhanceGamesWithArtwork(games);
+      return { success: true, count: enhancedGames.length };
     } catch (error) {
       console.error('[IPC] refresh-steam error:', error);
       throw error;
@@ -104,6 +107,47 @@ function registerIpcHandlers(mainWindow) {
       return { success: true };
     } catch (error) {
       console.error('[IPC] quit-app error:', error);
+      throw error;
+    }
+  });
+
+  // Auto start handlers
+  ipcMain.handle(IPC_CHANNELS.GET_AUTOSTART_STATUS, async () => {
+    try {
+      const isEnabled = await autoStartService.isAutoStartEnabled();
+      return { enabled: isEnabled };
+    } catch (error) {
+      console.error('[IPC] get-autostart-status error:', error);
+      return { enabled: false };
+    }
+  });
+
+  ipcMain.handle(IPC_CHANNELS.TOGGLE_AUTOSTART, async () => {
+    try {
+      const result = await autoStartService.toggleAutoStart();
+      return result;
+    } catch (error) {
+      console.error('[IPC] toggle-autostart error:', error);
+      throw error;
+    }
+  });
+
+  ipcMain.handle(IPC_CHANNELS.ENABLE_AUTOSTART, async () => {
+    try {
+      const success = await autoStartService.enableAutoStart();
+      return { enabled: true, success };
+    } catch (error) {
+      console.error('[IPC] enable-autostart error:', error);
+      throw error;
+    }
+  });
+
+  ipcMain.handle(IPC_CHANNELS.DISABLE_AUTOSTART, async () => {
+    try {
+      const success = await autoStartService.disableAutoStart();
+      return { enabled: false, success };
+    } catch (error) {
+      console.error('[IPC] disable-autostart error:', error);
       throw error;
     }
   });

@@ -13,7 +13,13 @@
  */
 
 const { contextBridge, ipcRenderer } = require('electron');
+const path = require('path');
 const { IPC_CHANNELS } = require('../shared/constants');
+
+function localPathToFileUrl(filePath) {
+  if (!filePath) return null;
+  return `file:///${filePath.replace(/\\/g, '/')}`;
+}
 
 /**
  * Valid IPC channels that can be invoked from renderer
@@ -28,6 +34,10 @@ const VALID_CHANNELS = [
   IPC_CHANNELS.LAUNCH_GAME,
   IPC_CHANNELS.REFRESH_STEAM,
   IPC_CHANNELS.QUIT_APP,
+  IPC_CHANNELS.GET_AUTOSTART_STATUS,
+  IPC_CHANNELS.TOGGLE_AUTOSTART,
+  IPC_CHANNELS.ENABLE_AUTOSTART,
+  IPC_CHANNELS.DISABLE_AUTOSTART,
 ];
 
 /**
@@ -88,6 +98,30 @@ const electronAPI = {
   quitApp: () => ipcRenderer.invoke(IPC_CHANNELS.QUIT_APP),
 
   /**
+   * Get auto start status
+   * @returns {Promise<{enabled: boolean}>}
+   */
+  getAutoStartStatus: () => ipcRenderer.invoke(IPC_CHANNELS.GET_AUTOSTART_STATUS),
+
+  /**
+   * Toggle auto start on/off
+   * @returns {Promise<{enabled: boolean, success: boolean}>}
+   */
+  toggleAutoStart: () => ipcRenderer.invoke(IPC_CHANNELS.TOGGLE_AUTOSTART),
+
+  /**
+   * Enable auto start
+   * @returns {Promise<{enabled: boolean, success: boolean}>}
+   */
+  enableAutoStart: () => ipcRenderer.invoke(IPC_CHANNELS.ENABLE_AUTOSTART),
+
+  /**
+   * Disable auto start
+   * @returns {Promise<{enabled: boolean, success: boolean}>}
+   */
+  disableAutoStart: () => ipcRenderer.invoke(IPC_CHANNELS.DISABLE_AUTOSTART),
+
+  /**
    * Listen for game exited events
    * @param {Function} callback - Function to call when game exits
    * @returns {Function} Cleanup function to remove listener
@@ -96,6 +130,8 @@ const electronAPI = {
     ipcRenderer.on(IPC_CHANNELS.GAME_EXITED, callback);
     return () => ipcRenderer.removeListener(IPC_CHANNELS.GAME_EXITED, callback);
   },
+
+  localPathToFileUrl,
 };
 
 // Expose the API to the renderer process

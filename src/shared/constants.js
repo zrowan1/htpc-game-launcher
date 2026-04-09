@@ -55,6 +55,12 @@ export const IPC_CHANNELS = {
   // App lifecycle
   QUIT_APP: 'quit-app',
   GAME_EXITED: 'game-exited',
+  
+  // Auto start
+  GET_AUTOSTART_STATUS: 'get-autostart-status',
+  TOGGLE_AUTOSTART: 'toggle-autostart',
+  ENABLE_AUTOSTART: 'enable-autostart',
+  DISABLE_AUTOSTART: 'disable-autostart',
 };
 
 /**
@@ -132,4 +138,28 @@ export const LAUNCH_DELAYS = {
   FOCUS_RETURN: 2000,    // Delay before returning focus after game exit
   STEAM_LAUNCH: 1000,    // Steam URL handling delay
   EXE_LAUNCH: 500,       // Direct exe launch delay
+};
+
+/**
+ * Steam artwork configuration
+ * @readonly
+ */
+export const STEAM_ARTWORK = {
+  CDN_HEADER_BASE: 'https://steamcdn-a.akamaihd.net/steam/apps',
+  CDN_LIBRARY_BASE: 'https://steamcdn-a.akamaihd.net/steam/apps',
+  GRID_FOLDER: 'config/grid',
+  CACHE_FOLDER: 'library_cache',
+  HEADER_EXTENSION: '/header.jpg',
+  LIBRARY_EXTENSION: '/library_600x900.jpg',
+  GRID_EXTENSION: '.jpg',
+};
+
+/**
+ * Artwork source types
+ * @readonly
+ */
+export const ARTWORK_SOURCE = {
+  LOCAL: 'local',        // Local Steam grid folder
+  CDN: 'cdn',             // Steam CDN
+  PLACEHOLDER: 'placeholder',
 };
