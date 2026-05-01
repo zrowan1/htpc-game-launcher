@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { KEYBOARD_LAYOUT } from '../../shared/constants';
+import { detectDpadMovement } from '../utils/gamepadUtils';
 
 export default function VirtualKeyboard({ 
   onKeyPress, 
   onClose,
   isOpen = true,
   initialValue = '',
-  onValueChange
+  onValueChange,
+  gamepadState
 }) {
   const [currentRow, setCurrentRow] = useState(0);
   const [currentCol, setCurrentCol] = useState(0);
@@ -60,6 +62,8 @@ export default function VirtualKeyboard({
   const currentKey = isSpecialFocused 
     ? specialKeys[currentCol]
     : rows[currentRow]?.[currentCol];
+
+  const isRowFocused = () => currentRow < totalRows;
 
   useEffect(() => {
     if (!isOpen) return;
@@ -145,7 +149,85 @@ export default function VirtualKeyboard({
     return () => window.removeEventListener('keydown', handleKeyDown, true);
   }, [isOpen, currentRow, currentCol, currentKey, isSpecialFocused, handleKeyPress, rows, specialKeys, totalRows]);
 
-  const isRowFocused = () => currentRow < totalRows;
+  // Gamepad navigatie
+  const prevAxesRef = useRef([0, 0, 0, 0, 0, 0, 0, 0]);
+  const prevButtonsRef = useRef({});
+
+  useEffect(() => {
+    if (!isOpen || !gamepadState?.connected) return;
+
+    const axes = gamepadState?.axes || [0, 0, 0, 0, 0, 0, 0, 0];
+    const prev = prevAxesRef.current;
+    const { direction, moved } = detectDpadMovement(prev, axes);
+
+    if (moved) {
+      switch (direction) {
+        case 'right':
+          if (isSpecialFocused) {
+            setCurrentCol(prev => Math.min(specialKeys.length - 1, prev + 1));
+          } else {
+            setCurrentCol(prev => {
+              const maxCol = rows[currentRow].length - 1;
+              return prev < maxCol ? prev + 1 : 0;
+            });
+          }
+          break;
+        case 'left':
+          if (isSpecialFocused) {
+            setCurrentCol(prev => Math.max(0, prev - 1));
+          } else {
+            setCurrentCol(prev => {
+              const maxCol = rows[currentRow].length - 1;
+              return prev > 0 ? prev - 1 : maxCol;
+            });
+          }
+          break;
+        case 'down':
+          if (isSpecialFocused) {
+            setCurrentRow(0);
+            setCurrentCol(0);
+          } else if (currentRow < totalRows - 1) {
+            setCurrentRow(currentRow + 1);
+            setCurrentCol(0);
+          } else {
+            setCurrentRow(totalRows);
+            setCurrentCol(0);
+          }
+          break;
+        case 'up':
+          if (isRowFocused()) {
+            if (currentRow === 0 && !isSpecialFocused) {
+              setCurrentRow(totalRows);
+              setCurrentCol(0);
+            } else if (currentRow > 0) {
+              setCurrentRow(currentRow - 1);
+              setCurrentCol(0);
+            }
+          }
+          break;
+      }
+    }
+
+    prevAxesRef.current = axes;
+  }, [gamepadState?.axes, gamepadState?.connected, isOpen, currentRow, isSpecialFocused, totalRows, rows, specialKeys]);
+
+  // Gamepad A/B knoppen
+  useEffect(() => {
+    if (!isOpen || !gamepadState?.connected) return;
+
+    const pressed = gamepadState?.buttonsPressed || {};
+    const prev = prevButtonsRef.current;
+
+    if (!prev.A && pressed.A) {
+      handleKeyPress(currentKey);
+    }
+
+    if (!prev.B && pressed.B) {
+      handleKeyPress('\u232B');
+    }
+
+    prevButtonsRef.current = pressed;
+  }, [gamepadState?.buttonsPressed, gamepadState?.connected, isOpen, currentKey, handleKeyPress]);
 
   if (!isOpen) return null;
 

@@ -8,21 +8,7 @@
  * @module services/gameApi
  */
 
-/**
- * Check if running in Electron environment
- * @returns {boolean}
- */
-function isElectron() {
-  return typeof window !== 'undefined' && window.electronAPI !== undefined;
-}
-
-/**
- * Get the electron API instance
- * @returns {Object|null}
- */
-function getApi() {
-  return isElectron() ? window.electronAPI : null;
-}
+import { getApi } from '../utils/electron';
 
 /**
  * Load games from persistence

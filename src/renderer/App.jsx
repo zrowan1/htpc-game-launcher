@@ -120,6 +120,7 @@ function AppContent() {
           <SettingsMenu
             onClose={() => setShowSettings(false)}
             onRefreshSteam={handleRefreshSteam}
+            gamepadState={gamepadState}
           />
         ) : (
           <GameGrid
@@ -136,6 +137,7 @@ function AppContent() {
         <AddGameDialog
           onConfirm={handleAddGame}
           onCancel={() => setShowAddGame(false)}
+          gamepadState={gamepadState}
         />
       )}
 

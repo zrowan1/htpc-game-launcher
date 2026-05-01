@@ -13,36 +13,7 @@
  */
 
 const { contextBridge, ipcRenderer } = require('electron');
-
-// IPC Channel names - defined inline avoid module resolution issues
-// in the sandboxed preload context
-const IPC_CHANNELS = {
-  // Game management
-  LOAD_GAMES: 'load-games',
- SAVE_GAMES: 'save-games',
-  ADD_GAME: 'add-game',
-  REMOVE_GAME: 'remove-game',
-  UPDATE_GAME: 'update-game',
-  LAUNCH_GAME: 'launch-game',
-  
-  // Steam integration
-  GET_STEAM_GAMES: 'get-steam-games',
-  REFRESH_STEAM: 'refresh-steam',
-  
-  // Game search & artwork
-  SEARCH_GAMES: 'search-games',
-  DOWNLOAD_COVER: 'download-cover',
-  
-  // App lifecycle
-  QUIT_APP: 'quit-app',
- GAME_EXITED: 'game-exited',
-  
-  // Auto start
-  GET_AUTOSTART_STATUS: 'get-autostart-status',
-  TOGGLE_AUTOSTART: 'toggle-autostart',
-  ENABLE_AUTOSTART: 'enable-autostart',
-  DISABLE_AUTOSTART: 'disable-autostart',
-};
+const { IPC_CHANNELS } = require('../shared/constants');
 
 function localPathToFileUrl(filePath) {
   if (!filePath) return null;

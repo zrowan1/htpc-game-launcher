@@ -52,20 +52,22 @@ export function useGamepad() {
       console.log('[useGamepad] Connected:', gp.id);
       console.log('[useGamepad] Buttons:', gp.buttons.length, 'Axes:', gp.axes.length);
       
-      // Start debug logging na 2 seconden
-      if (debugInterval) clearInterval(debugInterval);
-      debugInterval = setInterval(() => {
-        const gamepads = navigator.getGamepads();
-        const gp = gamepads[0];
-        if (gp) {
-          const activeAxes = gp.axes
-            .map((v, i) => ({ i, v: Math.abs(v) > 0.1 ? v.toFixed(2) : 0 }))
-            .filter(a => a.v !== 0);
-          if (activeAxes.length > 0) {
-            console.log('[useGamepad] Active axes:', activeAxes.map(a => `[${a.i}]=${a.v}`).join(' '));
+      // Debug logging alleen in development
+      if (import.meta.env?.DEV || process.env?.NODE_ENV === 'development') {
+        if (debugInterval) clearInterval(debugInterval);
+        debugInterval = setInterval(() => {
+          const gamepads = navigator.getGamepads();
+          const gp = gamepads[0];
+          if (gp) {
+            const activeAxes = gp.axes
+              .map((v, i) => ({ i, v: Math.abs(v) > 0.1 ? v.toFixed(2) : 0 }))
+              .filter(a => a.v !== 0);
+            if (activeAxes.length > 0) {
+              console.log('[useGamepad] Active axes:', activeAxes.map(a => `[${a.i}]=${a.v}`).join(' '));
+            }
           }
-        }
-      }, 1000);
+        }, 1000);
+      }
     }
 
     // Skip if state hasn't changed (optimization)

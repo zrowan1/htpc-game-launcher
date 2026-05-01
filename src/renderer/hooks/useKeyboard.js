@@ -13,7 +13,7 @@
  * @module hooks/useKeyboard
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 /**
  * Default button state
@@ -39,10 +39,10 @@ const KEY_TO_BUTTON = {
 function isInputFocused() {
   const activeElement = document.activeElement;
   if (!activeElement) return false;
-  
+
   const tag = activeElement.tagName;
   const isContentEditable = activeElement.isContentEditable;
-  
+
   return tag === 'INPUT' || tag === 'TEXTAREA' || isContentEditable;
 }
 
@@ -52,17 +52,17 @@ function isInputFocused() {
  */
 export function useKeyboard() {
   const [buttonsPressed, setButtonsPressed] = useState(DEFAULT_BUTTONS);
-  const keysHeld = new Set();
+  const keysHeldRef = useRef(new Set());
 
   const handleKeyDown = useCallback((e) => {
     // Ignore when typing in inputs
     if (isInputFocused()) return;
-    
+
     // Prevent repeat while key is held
-    if (keysHeld.has(e.code)) return;
-    
-    keysHeld.add(e.code);
-    
+    if (keysHeldRef.current.has(e.code)) return;
+
+    keysHeldRef.current.add(e.code);
+
     const button = KEY_TO_BUTTON[e.code];
     if (button) {
       setButtonsPressed((prev) => ({ ...prev, [button]: true }));
@@ -70,8 +70,8 @@ export function useKeyboard() {
   }, []);
 
   const handleKeyUp = useCallback((e) => {
-    keysHeld.delete(e.code);
-    
+    keysHeldRef.current.delete(e.code);
+
     const button = KEY_TO_BUTTON[e.code];
     if (button) {
       setButtonsPressed((prev) => ({ ...prev, [button]: false }));

@@ -11,7 +11,9 @@
 const RAWG_API = {
   BASE_URL: 'https://api.rawg.io/api',
   PAGE_SIZE: 8,
-  API_KEY: 'c2e155559f234b119fb81f8315bf8e89',
+  get API_KEY() {
+    return import.meta.env?.VITE_RAWG_API_KEY || '';
+  },
 };
 
 // Mock games database (in memory)

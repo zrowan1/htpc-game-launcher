@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { searchGames } from '../services/gameApi';
 import VirtualKeyboard from './VirtualKeyboard';
+import { useGamepadNavigation } from '../hooks/useGamepadNavigation';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 
-export default function AddGameDialog({ onConfirm, onCancel }) {
+export default function AddGameDialog({ onConfirm, onCancel, gamepadState }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [selectedGame, setSelectedGame] = useState(null);
@@ -11,11 +13,11 @@ export default function AddGameDialog({ onConfirm, onCancel }) {
   const [isSearching, setIsSearching] = useState(false);
   const [showKeyboard, setShowKeyboard] = useState(false);
   const [keyboardTarget, setKeyboardTarget] = useState('search');
-  const [focusedIndex, setFocusedIndex] = useState(0);
   
   const searchInputRef = useRef(null);
   const debounceRef = useRef(null);
-  const dialogRef = useRef(null);
+  const resultRefs = useRef([]);
+  const dialogRef = useFocusTrap({ isActive: !showKeyboard, onClose: onCancel });
   
   const COLUMNS = 4;
 
@@ -29,7 +31,6 @@ export default function AddGameDialog({ onConfirm, onCancel }) {
     try {
       const results = await searchGames(query);
       setSearchResults(results);
-      setFocusedIndex(0);
     } catch (error) {
       console.error('[AddGameDialog] Search failed:', error);
       setSearchResults([]);
@@ -56,7 +57,7 @@ export default function AddGameDialog({ onConfirm, onCancel }) {
     };
   }, [searchQuery, performSearch]);
 
-  const handleGameSelect = async (game) => {
+  const handleGameSelect = useCallback((game) => {
     setSelectedGame(game);
     setSearchQuery(game.title);
     setSearchResults([]);
@@ -64,9 +65,9 @@ export default function AddGameDialog({ onConfirm, onCancel }) {
     if (game.background_image) {
       setSelectedCover(game.background_image);
     }
-  };
+  }, []);
 
-  const handleConfirm = () => {
+  const handleConfirm = useCallback(() => {
     if (!selectedGame && !searchQuery.trim()) return;
     
     const title = searchQuery.trim() || selectedGame?.title;
@@ -80,21 +81,66 @@ export default function AddGameDialog({ onConfirm, onCancel }) {
     };
     
     onConfirm(gameData);
-  };
+  }, [selectedGame, searchQuery, exePath, selectedCover, onConfirm]);
 
-  const openKeyboard = (target) => {
+  const openKeyboard = useCallback((target) => {
     setKeyboardTarget(target);
     setShowKeyboard(true);
-  };
+  }, []);
 
-  const handleKeyboardValueChange = (value) => {
+  const handleKeyboardValueChange = useCallback((value) => {
     if (keyboardTarget === 'search') {
       setSearchQuery(value);
     } else {
       setExePath(value);
     }
-  };
+  }, [keyboardTarget]);
 
+  // Gamepad navigatie voor zoekresultaten
+  const { focusedIndex } = useGamepadNavigation({
+    gamepadState,
+    itemCount: searchResults.length,
+    columns: COLUMNS,
+    enabled: !showKeyboard && searchResults.length > 0,
+    onSelect: useCallback((index) => {
+      if (searchResults[index]) {
+        handleGameSelect(searchResults[index]);
+      }
+    }, [searchResults, handleGameSelect]),
+    onCancel: useCallback(() => {
+      if (selectedGame) {
+        setSelectedGame(null);
+        setSelectedCover(null);
+      } else {
+        onCancel();
+      }
+    }, [selectedGame, onCancel]),
+  });
+
+  // Y knop opent keyboard
+  const prevButtonsRef = useRef({});
+  useEffect(() => {
+    if (showKeyboard) return;
+    
+    const pressed = gamepadState?.buttonsPressed || {};
+    const prev = prevButtonsRef.current;
+    
+    if (!prev.Y && pressed.Y) {
+      openKeyboard('search');
+    }
+    
+    prevButtonsRef.current = pressed;
+  }, [gamepadState?.buttonsPressed, showKeyboard, openKeyboard]);
+
+  // Scroll focused result into view
+  useEffect(() => {
+    const ref = resultRefs.current[focusedIndex];
+    if (ref) {
+      ref.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }, [focusedIndex]);
+
+  // Keyboard event handling
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (showKeyboard) {
@@ -114,45 +160,35 @@ export default function AddGameDialog({ onConfirm, onCancel }) {
         case 'ArrowRight':
           e.preventDefault();
           if (searchResults.length > 0) {
-            setFocusedIndex(prev => 
-              prev < searchResults.length - 1 ? prev + 1 : prev
-            );
+            // Handled by gamepad navigation hook
           }
           break;
           
         case 'ArrowLeft':
           e.preventDefault();
-          setFocusedIndex(prev => prev > 0 ? prev - 1 : prev);
+          if (searchResults.length > 0) {
+            // Handled by gamepad navigation hook
+          }
           break;
           
         case 'ArrowDown':
           e.preventDefault();
           if (searchResults.length > 0) {
-            setFocusedIndex(prev => {
-              const row = Math.floor(prev / COLUMNS);
-              const col = prev % COLUMNS;
-              const nextRow = row + 1;
-              const maxIndex = searchResults.length - 1;
-              const nextIndex = Math.min(nextRow * COLUMNS + col, maxIndex);
-              return nextIndex;
-            });
+            // Handled by gamepad navigation hook
           }
           break;
           
         case 'ArrowUp':
           e.preventDefault();
-          setFocusedIndex(prev => {
-            const col = prev % COLUMNS;
-            const prevRow = Math.floor(prev / COLUMNS) - 1;
-            if (prevRow < 0) return prev;
-            return prevRow * COLUMNS + col;
-          });
+          if (searchResults.length > 0) {
+            // Handled by gamepad navigation hook
+          }
           break;
           
         case 'Enter':
           e.preventDefault();
-          if (searchResults.length > 0 && focusedIndex < searchResults.length) {
-            handleGameSelect(searchResults[focusedIndex]);
+          if (selectedGame || searchQuery.trim()) {
+            handleConfirm();
           }
           break;
           
@@ -165,7 +201,7 @@ export default function AddGameDialog({ onConfirm, onCancel }) {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [showKeyboard, searchResults, focusedIndex, onCancel]);
+  }, [showKeyboard, searchResults, selectedGame, searchQuery, onCancel, handleConfirm, openKeyboard]);
 
   const getCoverUrl = (url) => {
     if (!url) return null;
@@ -225,14 +261,14 @@ export default function AddGameDialog({ onConfirm, onCancel }) {
                 </button>
               </div>
               <p className="text-sm text-white/40 mt-1">
-                Start typing to search for game covers
+                Start typing to search for game covers (Y for keyboard)
               </p>
             </div>
 
             {searchResults.length > 0 && (
               <div>
                 <label className="text-base text-white/60 mb-2 block">
-                  Search Results (D-pad to navigate, Enter to select)
+                  Search Results ({searchResults.length} found)
                 </label>
                 <div 
                   className="grid gap-4 max-h-[320px] overflow-y-auto p-1"
@@ -245,6 +281,7 @@ export default function AddGameDialog({ onConfirm, onCancel }) {
                     return (
                       <div
                         key={game.id}
+                        ref={el => resultRefs.current[index] = el}
                         onClick={() => handleGameSelect(game)}
                         className={`game-card relative rounded-xl overflow-hidden cursor-pointer transition-all duration-200 select-none ${
                           isFocused ? 'game-card-selected' : ''
@@ -363,6 +400,7 @@ export default function AddGameDialog({ onConfirm, onCancel }) {
           }}
           initialValue={keyboardTarget === 'search' ? searchQuery : exePath}
           onValueChange={handleKeyboardValueChange}
+          gamepadState={gamepadState}
         />
       )}
     </div>

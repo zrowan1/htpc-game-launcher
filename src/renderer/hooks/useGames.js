@@ -10,6 +10,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { loadGames, addGame as apiAddGame, removeGame as apiRemoveGame, downloadCover, updateGame as apiUpdateGame } from '../services/gameApi';
 import { getSteamGames } from '../services/steamApi';
+import { isElectron } from '../utils/electron';
 import { LAUNCHER_TYPES } from '../../shared/constants';
 
 /**
@@ -29,14 +30,6 @@ const DUMMY_GAMES = [
   { id: 'dummy_11', title: 'Rocket League', launcher: 'steam', steamAppId: '252950' },
   { id: 'dummy_12', title: 'Minecraft', launcher: 'exe', exePath: 'C:\\Games\\Minecraft\\minecraft.exe' },
 ];
-
-/**
- * Check if running in Electron environment
- * @returns {boolean}
- */
-function isElectron() {
-  return typeof window !== 'undefined' && window.electronAPI !== undefined;
-}
 
 /**
  * Hook for game management

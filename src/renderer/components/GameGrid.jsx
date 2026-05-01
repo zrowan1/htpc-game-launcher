@@ -8,6 +8,7 @@ const COLS = GRID_CONFIG.COLUMNS;
 
 export default function GameGrid({ games, gamepadState, keyboardState, onAddGame, onRemoveGame }) {
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const cardRefs = useRef([]);
 
   // Refs so keyboard/gamepad handlers always see current values without re-registering
   const gamesRef = useRef(games);
@@ -21,6 +22,14 @@ export default function GameGrid({ games, gamepadState, keyboardState, onAddGame
       setSelectedIndex(games.length - 1);
     }
   }, [games.length]);
+
+  // Scroll selected card into view
+  useEffect(() => {
+    const cardRef = cardRefs.current[selectedIndex];
+    if (cardRef) {
+      cardRef.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }, [selectedIndex]);
 
   // --- Keyboard: arrow keys navigate, Enter launches ---
   useEffect(() => {
@@ -69,7 +78,6 @@ export default function GameGrid({ games, gamepadState, keyboardState, onAddGame
       const { direction, moved } = detectDpadMovement(prev, axes);
       
       if (moved) {
-        console.log('[GameGrid] Navigation:', direction, 'Axes:', axes.slice(0, 4).map(v => v.toFixed(2)));
         switch (direction) {
           case 'right':
             setSelectedIndex((i) => (i + 1) % total);
@@ -105,25 +113,29 @@ export default function GameGrid({ games, gamepadState, keyboardState, onAddGame
   }, [gamepadState?.buttonsPressed]);
 
   return (
-    <div className="p-8 w-full h-full">
+    <div className="p-8 w-full h-full overflow-y-auto">
       <h1 className="text-5xl font-bold mb-8 text-white/95 tracking-tight">HTPC Game Launcher</h1>
       <div className="grid grid-cols-6 gap-6">
         {games.length === 0 ? (
           <p className="text-white/50 text-xl">No games found. Press Y to add one.</p>
         ) : (
           games.map((game, idx) => (
-            <GameCard
+            <div
               key={game.id}
-              game={game}
-              isSelected={idx === selectedIndex}
-              index={idx}
-              onClick={() => setSelectedIndex(idx)}
-              onDoubleClick={() => launchGame(game)}
-            />
+              ref={el => cardRefs.current[idx] = el}
+            >
+              <GameCard
+                game={game}
+                isSelected={idx === selectedIndex}
+                index={idx}
+                onClick={() => setSelectedIndex(idx)}
+                onDoubleClick={() => launchGame(game)}
+              />
+            </div>
           ))
         )}
       </div>
-      <p className="mt-8 text-sm text-white/40">
+      <p className="mt-8 text-sm text-white/40 pb-8">
         Navigate: Arrow keys / D-pad &nbsp;|&nbsp; Launch: Enter / A button / Double-click &nbsp;|&nbsp; Settings: Escape / B button
       </p>
     </div>

@@ -171,6 +171,7 @@ export const ARTWORK_SOURCE = {
 
 /**
  * RAWG API configuration for game cover fetching
+ * API key should be set via environment variable (RAWG_API_KEY in main, VITE_RAWG_API_KEY in renderer)
  * @readonly
  */
 export const RAWG_API = {
@@ -178,7 +179,16 @@ export const RAWG_API = {
   IMAGE_BASE: 'https://media.rawg.io/media',
   SEARCH_ENDPOINT: '/games',
   PAGE_SIZE: 8,
-  API_KEY: 'c2e155559f234b119fb81f8315bf8e89',
+  get API_KEY() {
+    // Main process uses process.env, renderer uses import.meta.env
+    if (typeof process !== 'undefined' && process.env) {
+      return process.env.RAWG_API_KEY || '';
+    }
+    if (typeof import.meta !== 'undefined' && import.meta.env) {
+      return import.meta.env.VITE_RAWG_API_KEY || '';
+    }
+    return '';
+  },
 };
 
 /**
